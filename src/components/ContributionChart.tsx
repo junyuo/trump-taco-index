@@ -42,16 +42,16 @@ export function ContributionChart({ latest }: { latest: LatestData }) {
       <div className="contribution-chart" aria-label="四項指標壓力貢獻水平長條圖">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 18, left: 10, bottom: 0 }}>
-            <CartesianGrid stroke="#263038" strokeDasharray="3 5" horizontal={false} />
-            <XAxis type="number" stroke="#7f8b92" tickLine={false} axisLine={false} />
-            <YAxis type="category" dataKey="name" width={104} stroke="#aeb7bc" tickLine={false} axisLine={false} />
+            <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" horizontal={false} />
+            <XAxis type="number" stroke="var(--chart-axis)" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis type="category" dataKey="name" width={104} stroke="var(--text-soft)" fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip
-              cursor={{ fill: 'rgba(255,255,255,.03)' }}
+              cursor={{ fill: 'var(--chart-hover)' }}
               formatter={(value) => [
                 typeof value === 'number' ? `${value.toFixed(2)}σ` : '—',
                 '加權貢獻',
               ]}
-              contentStyle={{ background: '#11181d', border: '1px solid #354048', borderRadius: 8 }}
+              contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-line)', borderRadius: 8, color: 'var(--text)' }}
             />
             <Bar dataKey="contribution" radius={[0, 5, 5, 0]} barSize={18}>
               {data.map((item) => (
@@ -60,8 +60,8 @@ export function ContributionChart({ latest }: { latest: LatestData }) {
               <LabelList
                 dataKey="contribution"
                 position="right"
-                fill="#dce1dd"
-                fontSize={10}
+                fill="var(--text)"
+                fontSize={12}
                 formatter={(value) => typeof value === 'number' ? `${value.toFixed(2)}σ` : '—'}
               />
             </Bar>

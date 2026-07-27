@@ -1,9 +1,26 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#080b0e" />
+    <meta name="theme-color" content="#f6f1e7" />
+    <script>
+      (() => {
+        try {
+          const storedTheme = localStorage.getItem('taco-theme')
+          const theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light'
+          document.documentElement.dataset.theme = theme
+          document.documentElement.style.colorScheme = theme
+          document.querySelector('meta[name="theme-color"]')?.setAttribute(
+            'content',
+            theme === 'dark' ? '#080b0e' : '#f6f1e7',
+          )
+        } catch {
+          document.documentElement.dataset.theme = 'light'
+          document.documentElement.style.colorScheme = 'light'
+        }
+      })()
+    </script>
     <title>Trump TACO Index｜川普政策退縮壓力指數</title>
     <meta name="description" content="追蹤布蘭特原油、美國公債殖利率、荷姆茲海峽航運與標普 500，觀察市場是否接近下一個 Trump TACO 時刻。" />
     <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />

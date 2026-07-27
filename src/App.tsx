@@ -8,6 +8,7 @@ import { Gauge } from './components/Gauge'
 import { HistoryChart } from './components/HistoryChart'
 import { IndicatorCard } from './components/IndicatorCard'
 import { Methodology } from './components/Methodology'
+import { ThemeToggle } from './components/ThemeToggle'
 import { loadDashboardData, type DashboardData } from './lib/data'
 import { buildObservationSummary } from './lib/summary'
 import { indicatorKeys } from './config/indexConfig'
@@ -65,15 +66,18 @@ function Dashboard({ data }: { data: DashboardData }) {
           <a href="#timeline">事件紀錄</a>
           <a href="#methodology">方法論</a>
         </nav>
-        <details className="mobile-nav">
-          <summary aria-label="開啟主要導覽"><Menu aria-hidden="true" size={20} /></summary>
-          <nav aria-label="行動版主要導覽">
-            <a href="#dashboard">市場儀表板</a>
-            <a href="#timeline">事件研究區</a>
-            <a href="#methodology">方法論</a>
-          </nav>
-        </details>
-        <span className="header-mode"><i aria-hidden="true" /> {modeLabels[data.latest.dataMode]}</span>
+        <div className="header-actions">
+          <ThemeToggle />
+          <span className="header-mode"><i aria-hidden="true" /> {modeLabels[data.latest.dataMode]}</span>
+          <details className="mobile-nav">
+            <summary aria-label="開啟主要導覽"><Menu aria-hidden="true" size={20} /></summary>
+            <nav aria-label="行動版主要導覽">
+              <a href="#dashboard">市場儀表板</a>
+              <a href="#timeline">事件研究區</a>
+              <a href="#methodology">方法論</a>
+            </nav>
+          </details>
+        </div>
       </header>
 
       <main id="top">

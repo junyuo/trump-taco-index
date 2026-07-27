@@ -122,30 +122,31 @@ export function HistoryChart({ history, events }: Props) {
               <AreaChart data={filteredHistory} margin={{ top: 18, right: 12, left: -16, bottom: 4 }}>
               <defs>
                 <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ee8052" stopOpacity={0.38} />
-                  <stop offset="100%" stopColor="#ee8052" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--orange)" stopOpacity={0.38} />
+                  <stop offset="100%" stopColor="var(--orange)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#263038" strokeDasharray="3 5" vertical={false} />
+              <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" vertical={false} />
               <XAxis
                 dataKey="date"
                 tickFormatter={(date: string) => date.slice(5).replace('-', '/')}
-                stroke="#7f8b92"
+                stroke="var(--chart-axis)"
+                fontSize={12}
                 tickLine={false}
                 axisLine={false}
                 minTickGap={32}
               />
-              <YAxis domain={[0, 100]} ticks={[0, 25, 50, 70, 85, 100]} stroke="#7f8b92" tickLine={false} axisLine={false} />
+              <YAxis domain={[0, 100]} ticks={[0, 25, 50, 70, 85, 100]} stroke="var(--chart-axis)" fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip content={<ChartTooltip events={events} />} />
-              <ReferenceLine y={70} stroke="#ee8052" strokeDasharray="5 5" label={{ value: '警戒 70', fill: '#ee8052', position: 'insideTopRight' }} />
-              <ReferenceLine y={85} stroke="#a82f38" strokeDasharray="5 5" label={{ value: 'TACO 85', fill: '#ef6973', position: 'insideTopRight' }} />
+              <ReferenceLine y={70} stroke="var(--orange)" strokeDasharray="5 5" label={{ value: '警戒 70', fill: 'var(--orange)', position: 'insideTopRight', fontSize: 12 }} />
+              <ReferenceLine y={85} stroke="var(--deep-red)" strokeDasharray="5 5" label={{ value: 'TACO 85', fill: 'var(--critical-text)', position: 'insideTopRight', fontSize: 12 }} />
               <Area
                 type="monotone"
                 dataKey="score"
-                stroke="#f0b651"
+                stroke="var(--taco)"
                 strokeWidth={3}
                 fill="url(#scoreGradient)"
-                activeDot={{ r: 5, fill: '#f0b651', stroke: '#080b0e', strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: 'var(--taco)', stroke: 'var(--bg)', strokeWidth: 2 }}
               />
               </AreaChart>
             </ResponsiveContainer>

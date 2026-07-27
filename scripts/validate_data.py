@@ -13,7 +13,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "public" / "data"
 INDICATOR_KEYS = ("brent", "us10y", "hormuz", "sp500")
-LIVE_STALE_HOURS = {"brent": 96, "us10y": 96, "hormuz": 240, "sp500": 96}
+LIVE_STALE_HOURS = {"brent": 192, "us10y": 96, "hormuz": 240, "sp500": 96}
 FORBIDDEN_LIVE_MARKERS = ("demo", "simulated", "manual")
 
 
@@ -114,7 +114,7 @@ def validate_latest(
             if validation_time.tzinfo is None:
                 validation_time = validation_time.replace(tzinfo=timezone.utc)
             observation_time = datetime.combine(
-                observation_date, time.min, tzinfo=timezone.utc
+                observation_date, time.max, tzinfo=timezone.utc
             )
             age_hours = (
                 validation_time.astimezone(timezone.utc) - observation_time

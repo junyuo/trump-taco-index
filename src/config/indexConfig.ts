@@ -6,7 +6,7 @@ export const indexConfig = {
   rollingWindow: 60,
   staleAfterHours: 96,
   indicatorStaleAfterHours: {
-    brent: 96,
+    brent: 192,
     us10y: 96,
     hormuz: 240,
     sp500: 96,

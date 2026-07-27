@@ -100,8 +100,11 @@ describe('freshness', () => {
 
   it('市場與 PortWatch 使用不同 freshness 門檻', () => {
     const now = new Date('2026-07-27T12:00:00Z')
-    expect(isIndicatorStale('brent', '2026-07-22', now)).toBe(true)
-    expect(isIndicatorStale('hormuz', '2026-07-22', now)).toBe(false)
-    expect(isIndicatorStale('hormuz', '2026-07-15', now)).toBe(true)
+    expect(isIndicatorStale('brent', '2026-07-20', now)).toBe(false)
+    expect(isIndicatorStale('brent', '2026-07-18', now)).toBe(true)
+    expect(isIndicatorStale('sp500', '2026-07-23', now)).toBe(false)
+    expect(isIndicatorStale('sp500', '2026-07-22', now)).toBe(true)
+    expect(isIndicatorStale('hormuz', '2026-07-17', now)).toBe(false)
+    expect(isIndicatorStale('hormuz', '2026-07-16', now)).toBe(true)
   })
 })

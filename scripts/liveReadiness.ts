@@ -23,7 +23,7 @@ export function assertLiveReadiness(data: LatestData, now = new Date()): true {
     if (!indicator.sourceUrl) {
       throw new Error(`${key}.sourceUrl 為 live 資料必要欄位`)
     }
-    const observationTime = Date.parse(`${indicator.asOfDate}T00:00:00Z`)
+    const observationTime = Date.parse(`${indicator.asOfDate}T23:59:59Z`)
     const ageHours = (now.getTime() - observationTime) / (60 * 60 * 1_000)
     if (ageHours < 0) {
       throw new Error(`${key}.asOfDate 不可晚於驗證時間`)

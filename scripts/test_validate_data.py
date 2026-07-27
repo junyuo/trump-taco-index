@@ -66,9 +66,15 @@ class LiveValidationTests(unittest.TestCase):
 
     def test_rejects_stale_market_and_hormuz_data(self) -> None:
         market = copy.deepcopy(live_fixture())
-        market["indicators"]["brent"]["asOfDate"] = "2026-07-22"
+        market["indicators"]["sp500"]["asOfDate"] = "2026-07-22"
         with self.assertRaisesRegex(ValueError, "96"):
             validate_latest(market, require_live=True, now=NOW)
+
+        brent = copy.deepcopy(live_fixture())
+        brent["indicators"]["brent"]["asOfDate"] = "2026-07-18"
+        brent["asOf"] = "2026-07-18T00:00:00Z"
+        with self.assertRaisesRegex(ValueError, "192"):
+            validate_latest(brent, require_live=True, now=NOW)
 
         hormuz = copy.deepcopy(live_fixture())
         hormuz["indicators"]["hormuz"]["asOfDate"] = "2026-07-16"

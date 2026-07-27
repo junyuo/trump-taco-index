@@ -59,8 +59,13 @@ describe('live readiness gate', () => {
 
   it('依指標門檻拒絕 stale data', () => {
     const staleMarket = liveFixture()
-    staleMarket.indicators.brent.asOfDate = '2026-07-22'
+    staleMarket.indicators.sp500.asOfDate = '2026-07-22'
     expect(() => assertLiveReadiness(staleMarket, now)).toThrow('96')
+
+    const staleBrent = liveFixture()
+    staleBrent.indicators.brent.asOfDate = '2026-07-18'
+    staleBrent.asOf = '2026-07-18T00:00:00Z'
+    expect(() => assertLiveReadiness(staleBrent, now)).toThrow('192')
 
     const staleHormuz = liveFixture()
     staleHormuz.indicators.hormuz.asOfDate = '2026-07-16'

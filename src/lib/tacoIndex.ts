@@ -117,7 +117,7 @@ export function isIndicatorStale(
   now = new Date(),
 ): boolean {
   return isStale(
-    `${observationDate}T00:00:00Z`,
+    `${observationDate}T23:59:59Z`,
     now,
     indexConfig.indicatorStaleAfterHours[key],
   )

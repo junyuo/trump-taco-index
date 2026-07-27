@@ -38,7 +38,7 @@ npm run data:test
 
 `npm run data:update` 預設使用可重現、非隨機的 demo provider。設定 `DATA_PROVIDER=live` 後會讀取 FRED 與 IMF PortWatch；加上 `--dry-run` 會實際抓取、計算及驗證，但不修改 JSON。
 資料檔修改後另執行 `python3 scripts/validate_data.py`，以獨立驗證器檢查必要欄位、日期、範圍與排序。
-真實資料發布前使用 `python3 scripts/validate_data.py --require-live`，額外阻擋非 delayed、缺少來源 URL、過期、日期不一致或含 demo／simulated／manual 標記的資料。
+真實資料發布前使用 `python3 scripts/validate_data.py --require-live`，額外阻擋非 delayed、缺少來源 URL、過期、日期不一致或含 demo／simulated／manual 標記的資料。Freshness 從觀測日結束時間起算：FRED Brent 為 192 小時、10Y 與 S&P 500 為 96 小時、PortWatch 為 240 小時，以容納各來源不同的週末與發布延遲。
 
 ## GitHub Pages 啟用
 

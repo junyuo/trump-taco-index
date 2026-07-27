@@ -20,6 +20,7 @@ on:
         default: false
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -58,10 +59,12 @@ jobs:
             npm run data:validate
           fi
       - name: Commit changed data only
+        id: commit-data
         if: ${{ github.event_name == 'schedule' || inputs.publish }}
         run: |
           if git diff --quiet -- public/data/latest.json public/data/history.json; then
             echo "No data changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -69,3 +72,9 @@ jobs:
           git add public/data/latest.json public/data/history.json
           git commit -m "chore(data): update TACO market data"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Trigger Pages deployment
+        if: ${{ steps.commit-data.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main

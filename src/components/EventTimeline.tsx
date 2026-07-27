@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, ExternalLink, ShieldQuestion } from 'lucide-react'
+import { ArrowRight, CalendarDays, ExternalLink, FlaskConical, ShieldQuestion } from 'lucide-react'
 import { formatDate } from '../lib/format'
 import type { TacoEvent } from '../types/data'
 
@@ -16,20 +16,33 @@ const confidenceLabels = {
 } as const
 
 export function EventTimeline({ events }: { events: TacoEvent[] }) {
+  const isDemoResearch = events.length > 0 && events.every((event) => event.sources.length === 0)
+
   return (
-    <section className="timeline-section" aria-labelledby="timeline-title">
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">THREAT → MARKET → PIVOT</span>
-          <h2 id="timeline-title">TACO 事件時間軸</h2>
-        </div>
-        <span className="section-count">{events.length} 筆紀錄</span>
-      </div>
-      {events.length === 0 ? (
-        <div className="empty-state">尚無經驗證的歷史事件。</div>
-      ) : (
-        <div className="timeline-list">
-          {events.map((event) => (
+    <section className={`timeline-section${isDemoResearch ? ' demo-research' : ''}`} aria-labelledby="timeline-title">
+      <details open={!isDemoResearch}>
+        <summary className="section-heading">
+          <div>
+            <span className="eyebrow">THREAT → MARKET → PIVOT</span>
+            <h2 id="timeline-title">{isDemoResearch ? '事件研究區' : 'TACO 事件時間軸'}</h2>
+          </div>
+          {isDemoResearch ? (
+            <span className="demo-research-badge"><FlaskConical aria-hidden="true" size={14} />DEMO／尚未完成來源查證</span>
+          ) : (
+            <span className="section-count">{events.length} 筆已查證紀錄</span>
+          )}
+        </summary>
+        <div className="timeline-body">
+          {isDemoResearch && (
+            <p className="research-note">
+              此區內容僅示範事件資料結構，不是已驗證的政策或市場紀錄。
+            </p>
+          )}
+          {events.length === 0 ? (
+            <div className="empty-state">尚無經驗證的歷史事件。</div>
+          ) : (
+            <div className="timeline-list">
+              {events.map((event) => (
             <article className="timeline-item" key={event.id}>
               <div className="timeline-marker" aria-hidden="true">
                 <span>{event.daysToPivot ?? '—'}</span>
@@ -76,9 +89,11 @@ export function EventTimeline({ events }: { events: TacoEvent[] }) {
                 </div>
               </div>
             </article>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </details>
     </section>
   )
 }

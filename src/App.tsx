@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Activity, ArrowDown, Gauge as GaugeIcon, Info, RefreshCw } from 'lucide-react'
+import { Activity, ArrowDown, Gauge as GaugeIcon, Info, Menu, RefreshCw } from 'lucide-react'
 import { ContributionChart } from './components/ContributionChart'
 import { DataStatusBanner } from './components/DataStatusBanner'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -12,8 +12,13 @@ import { loadDashboardData, type DashboardData } from './lib/data'
 import { buildObservationSummary } from './lib/summary'
 import { indicatorKeys } from './config/indexConfig'
 import { isIndicatorStale } from './lib/tacoIndex'
+import {
+  getLeadingIndicatorKeys,
+  getThresholdDistance,
+  indicatorPresentation,
+} from './lib/dashboardView'
+import { formatDateTime } from './lib/format'
 
-const cardAccents = ['#f0b651', '#ee8052', '#d66a43', '#a84955']
 const modeLabels = {
   live: 'LIVE DATA',
   delayed: 'DELAYED DATA',
@@ -35,10 +40,15 @@ function LoadingDashboard() {
 }
 
 function Dashboard({ data }: { data: DashboardData }) {
-  const stale = indicatorKeys.some((key) =>
+  const staleIndicators = indicatorKeys.filter((key) =>
     isIndicatorStale(key, data.latest.indicators[key].asOfDate),
   )
   const summary = buildObservationSummary(data.latest)
+  const leadingKeys = getLeadingIndicatorKeys(data.latest.indicators)
+  const leadingLabels = leadingKeys
+    .map((key) => indicatorPresentation[key].shortLabel)
+    .join('、')
+  const warningDistance = getThresholdDistance(data.latest.index.score, 70)
 
   return (
     <>
@@ -55,11 +65,19 @@ function Dashboard({ data }: { data: DashboardData }) {
           <a href="#timeline">事件紀錄</a>
           <a href="#methodology">方法論</a>
         </nav>
+        <details className="mobile-nav">
+          <summary aria-label="開啟主要導覽"><Menu aria-hidden="true" size={20} /></summary>
+          <nav aria-label="行動版主要導覽">
+            <a href="#dashboard">市場儀表板</a>
+            <a href="#timeline">事件研究區</a>
+            <a href="#methodology">方法論</a>
+          </nav>
+        </details>
         <span className="header-mode"><i aria-hidden="true" /> {modeLabels[data.latest.dataMode]}</span>
       </header>
 
       <main id="top">
-        <DataStatusBanner data={data.latest} stale={stale} />
+        <DataStatusBanner data={data.latest} staleIndicators={staleIndicators} />
 
         <section className="hero" id="dashboard">
           <div className="hero-copy">
@@ -70,6 +88,20 @@ function Dashboard({ data }: { data: DashboardData }) {
             </h1>
             <p className="hero-lead">市場還能承受多久？用四個市場變數觀察下一個 TACO 時刻。</p>
             <p className="hero-line">市場先被嚇一跳，政策再往後退一步。</p>
+            <dl className="hero-facts" aria-label="市場壓力快速摘要">
+              <div>
+                <dt>主要壓力</dt>
+                <dd>{leadingLabels}</dd>
+              </div>
+              <div>
+                <dt>距 70 分警戒</dt>
+                <dd>{warningDistance === 0 ? '已進入警戒區' : `${warningDistance} 分`}</dd>
+              </div>
+              <div>
+                <dt>共同資料基準</dt>
+                <dd>{formatDateTime(data.latest.asOf)}</dd>
+              </div>
+            </dl>
             <a className="scroll-link" href="#indicators">
               查看壓力來源 <ArrowDown aria-hidden="true" size={16} />
             </a>
@@ -78,6 +110,7 @@ function Dashboard({ data }: { data: DashboardData }) {
             score={data.latest.index.score}
             compositeZ={data.latest.index.compositeZ}
             asOf={data.latest.asOf}
+            lastSuccessfulUpdate={data.latest.lastSuccessfulUpdate}
           />
         </section>
 
@@ -89,6 +122,16 @@ function Dashboard({ data }: { data: DashboardData }) {
           </p>
         </aside>
 
+        <section className="observation-panel" aria-labelledby="observation-title">
+          <div className="observation-icon" aria-hidden="true"><GaugeIcon /></div>
+          <div>
+            <span className="eyebrow">RULE-BASED BRIEF</span>
+            <h2 id="observation-title">今日觀察摘要</h2>
+            <p>{summary}</p>
+          </div>
+          <span className="rules-badge">規則式產生</span>
+        </section>
+
         <section className="indicator-section" id="indicators" aria-labelledby="indicators-title">
           <div className="section-heading">
             <div>
@@ -98,8 +141,13 @@ function Dashboard({ data }: { data: DashboardData }) {
             <p>指數越高，代表市場壓力越接近歷史上的政策轉向區域。</p>
           </div>
           <div className="indicator-grid">
-            {Object.values(data.latest.indicators).map((indicator, index) => (
-              <IndicatorCard indicator={indicator} accent={cardAccents[index]} key={indicator.label} />
+            {indicatorKeys.map((key) => (
+              <IndicatorCard
+                indicatorKey={key}
+                indicator={data.latest.indicators[key]}
+                stale={staleIndicators.includes(key)}
+                key={key}
+              />
             ))}
           </div>
         </section>
@@ -111,16 +159,6 @@ function Dashboard({ data }: { data: DashboardData }) {
           <ErrorBoundary fallbackTitle="壓力貢獻暫時無法顯示">
             <ContributionChart latest={data.latest} />
           </ErrorBoundary>
-        </section>
-
-        <section className="observation-panel" aria-labelledby="observation-title">
-          <div className="observation-icon" aria-hidden="true"><GaugeIcon /></div>
-          <div>
-            <span className="eyebrow">RULE-BASED BRIEF</span>
-            <h2 id="observation-title">今日觀察摘要</h2>
-            <p>{summary}</p>
-          </div>
-          <span className="rules-badge">規則式產生</span>
         </section>
 
         <div id="timeline">

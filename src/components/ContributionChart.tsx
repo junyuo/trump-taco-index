@@ -3,29 +3,32 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
+import type { IndicatorKey } from '../config/indexConfig'
+import { indicatorPresentation } from '../lib/dashboardView'
 import type { LatestData } from '../types/data'
 
-const names: Record<keyof LatestData['indicators'], string> = {
-  brent: 'Brent 原油',
-  us10y: '美國 10Y',
-  hormuz: '荷姆茲通行量',
-  sp500: 'S&P 500',
+const colors: Record<IndicatorKey, string> = {
+  brent: 'var(--indicator-brent)',
+  us10y: 'var(--indicator-us10y)',
+  hormuz: 'var(--indicator-hormuz)',
+  sp500: 'var(--indicator-sp500)',
 }
 
-const colors = ['#f0b651', '#ee8052', '#dc5b38', '#a84955']
-
 export function ContributionChart({ latest }: { latest: LatestData }) {
-  const data = Object.entries(latest.indicators)
+  const data = (Object.entries(latest.indicators) as [IndicatorKey, LatestData['indicators']['brent']][])
     .map(([key, item]) => ({
-      name: names[key as keyof LatestData['indicators']],
+      key,
+      name: indicatorPresentation[key].shortLabel,
       contribution: item.contribution,
     }))
     .sort((left, right) => right.contribution - left.contribution)
+  const leader = data[0]
 
   return (
     <section className="panel contribution-panel" aria-labelledby="contribution-title">
@@ -51,14 +54,24 @@ export function ContributionChart({ latest }: { latest: LatestData }) {
               contentStyle={{ background: '#11181d', border: '1px solid #354048', borderRadius: 8 }}
             />
             <Bar dataKey="contribution" radius={[0, 5, 5, 0]} barSize={18}>
-              {data.map((item, index) => (
-                <Cell fill={colors[index]} key={item.name} />
+              {data.map((item) => (
+                <Cell fill={colors[item.key]} key={item.name} />
               ))}
+              <LabelList
+                dataKey="contribution"
+                position="right"
+                fill="#dce1dd"
+                fontSize={10}
+                formatter={(value) => typeof value === 'number' ? `${value.toFixed(2)}σ` : '—'}
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="panel-note">貢獻＝方向調整後的壓力 Z-score × 代理權重。</p>
+      <p className="panel-note">
+        目前最大壓力來源為<strong>{leader.name}</strong>（{leader.contribution.toFixed(2)}σ）。
+        貢獻＝方向調整後的壓力 Z-score × 代理權重。
+      </p>
     </section>
   )
 }

@@ -1,12 +1,15 @@
 import { AlertTriangle, Database, FlaskConical } from 'lucide-react'
+import type { IndicatorKey } from '../config/indexConfig'
+import { indicatorPresentation } from '../lib/dashboardView'
+import { formatDateTime } from '../lib/format'
 import type { LatestData } from '../types/data'
 
 interface Props {
   data: LatestData
-  stale: boolean
+  staleIndicators: IndicatorKey[]
 }
 
-export function DataStatusBanner({ data, stale }: Props) {
+export function DataStatusBanner({ data, staleIndicators }: Props) {
   if (data.dataMode === 'demo') {
     return (
       <div className="data-banner demo-banner" role="status">
@@ -19,13 +22,14 @@ export function DataStatusBanner({ data, stale }: Props) {
     )
   }
 
-  if (stale) {
+  if (staleIndicators.length > 0) {
+    const names = staleIndicators.map((key) => indicatorPresentation[key].shortLabel).join('、')
     return (
       <div className="data-banner stale-banner" role="status">
         <AlertTriangle aria-hidden="true" size={18} />
         <div>
-          <strong>資料更新延遲</strong>
-          <span>畫面保留最後一份有效資料，請留意資料時間。</span>
+          <strong>{names}更新延遲</strong>
+          <span>畫面保留最後一份有效資料；最近成功抓取於 {formatDateTime(data.lastSuccessfulUpdate)}。</span>
         </div>
       </div>
     )
@@ -36,8 +40,8 @@ export function DataStatusBanner({ data, stale }: Props) {
       <div className="data-banner live-banner" role="status">
         <Database aria-hidden="true" size={18} />
         <div>
-          <strong>真實延遲資料｜DELAYED DATA</strong>
-          <span>四項來源均為日資料；請以各卡片的來源日期與發布狀態為準。</span>
+          <strong>四項來源狀態正常</strong>
+          <span>日資料／延遲發布；最近成功抓取於 {formatDateTime(data.lastSuccessfulUpdate)}。</span>
         </div>
       </div>
     )

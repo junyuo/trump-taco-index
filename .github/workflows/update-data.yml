@@ -28,7 +28,11 @@ concurrency:
 
 jobs:
   update:
+    if: ${{ github.event_name != 'schedule' || vars.DATA_PROVIDER == 'live' }}
     runs-on: ubuntu-latest
+    env:
+      DATA_PROVIDER: ${{ github.event_name == 'workflow_dispatch' && inputs.provider || vars.DATA_PROVIDER || 'demo' }}
+      PUBLISH_DATA: ${{ github.event_name == 'schedule' || inputs.publish }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,13 +47,16 @@ jobs:
         run: npm ci
       - name: Fetch and validate market data
         env:
-          DATA_PROVIDER: ${{ github.event_name == 'workflow_dispatch' && inputs.provider || vars.DATA_PROVIDER || 'demo' }}
-          PUBLISH_DATA: ${{ github.event_name == 'schedule' || inputs.publish }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: npm run data:update
       - name: Validate generated JSON
         if: ${{ github.event_name == 'schedule' || inputs.publish }}
-        run: npm run data:validate
+        run: |
+          if [ "$DATA_PROVIDER" = "live" ]; then
+            npm run data:validate -- --require-live
+          else
+            npm run data:validate
+          fi
       - name: Commit changed data only
         if: ${{ github.event_name == 'schedule' || inputs.publish }}
         run: |

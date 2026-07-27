@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "data:update": "tsx scripts/fetch-market-data.ts",
     "data:backfill": "tsx scripts/backfill-history.ts",
-    "data:validate": "python3 scripts/validate_data.py"
+    "data:validate": "python3 scripts/validate_data.py",
+    "data:test": "python3 -m unittest scripts/test_validate_data.py"
   },
   "dependencies": {
     "lucide-react": "^1.27.0",

@@ -35,6 +35,8 @@ jobs:
         run: npm run test
       - name: Validate static data
         run: npm run data:validate
+      - name: Test data safety gates
+        run: npm run data:test
       - name: Build
         run: npm run build
       - name: Upload Pages artifact
@@ -49,6 +51,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Checkout deployed revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Smoke test deployed latest data
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          DATA_PROVIDER: ${{ vars.DATA_PROVIDER || 'demo' }}
+        run: |
+          if [ "$DATA_PROVIDER" = "live" ]; then
+            python3 scripts/smoke_deployment.py --base-url "$PAGE_URL" --require-live
+          else
+            python3 scripts/smoke_deployment.py --base-url "$PAGE_URL"
+          fi

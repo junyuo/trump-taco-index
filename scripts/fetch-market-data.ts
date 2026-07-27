@@ -10,6 +10,7 @@ import {
   toPressureZ,
 } from '../src/lib/tacoIndex'
 import { historyDataSchema, latestDataSchema, type HistoryItem, type LatestData } from '../src/types/data'
+import { assertLiveReadiness } from './liveReadiness'
 import { DemoProvider } from './providers/demoProvider'
 import { LiveProvider } from './providers/liveProvider'
 import type { DataProvider, ProviderSnapshot } from './providers/types'
@@ -148,6 +149,9 @@ async function main() {
     index: { score, compositeZ, status: getIndexStatus(score).name },
     indicators,
   })
+  if (provider.name === 'live') {
+    assertLiveReadiness(latest, new Date(successfulUpdate))
+  }
   const history = historyDataSchema.parse(JSON.parse(await readFile(historyPath, 'utf8')))
   const entry: HistoryItem = {
     date: snapshot.asOf.slice(0, 10),

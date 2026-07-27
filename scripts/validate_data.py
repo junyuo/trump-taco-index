@@ -3,15 +3,18 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
-from datetime import date, datetime
+from datetime import date, datetime, time, timezone
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "public" / "data"
 INDICATOR_KEYS = ("brent", "us10y", "hormuz", "sp500")
+LIVE_STALE_HOURS = {"brent": 96, "us10y": 96, "hormuz": 240, "sp500": 96}
+FORBIDDEN_LIVE_MARKERS = ("demo", "simulated", "manual")
 
 
 def require(condition: bool, message: str) -> None:
@@ -34,19 +37,26 @@ def finite_number(value: object, field: str) -> float:
     return number
 
 
-def validate_iso_datetime(value: object, field: str) -> None:
+def validate_iso_datetime(value: object, field: str) -> datetime:
     require(isinstance(value, str), f"{field} must be a string")
-    datetime.fromisoformat(value.replace("Z", "+00:00"))
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    require(parsed.tzinfo is not None, f"{field} must include a timezone")
+    return parsed
 
 
-def validate_iso_date(value: object, field: str) -> None:
+def validate_iso_date(value: object, field: str) -> date:
     require(isinstance(value, str), f"{field} must be a string")
-    date.fromisoformat(value)
+    return date.fromisoformat(value)
 
 
-def validate_latest(payload: object) -> None:
+def validate_latest(
+    payload: object,
+    *,
+    require_live: bool = False,
+    now: datetime | None = None,
+) -> None:
     require(isinstance(payload, dict), "latest.json must contain an object")
-    validate_iso_datetime(payload.get("asOf"), "latest.asOf")
+    as_of = validate_iso_datetime(payload.get("asOf"), "latest.asOf")
     validate_iso_datetime(
         payload.get("lastSuccessfulUpdate"), "latest.lastSuccessfulUpdate"
     )
@@ -63,6 +73,7 @@ def validate_latest(payload: object) -> None:
     indicators = payload.get("indicators")
     require(isinstance(indicators, dict), "latest.indicators must be an object")
     require(set(indicators) == set(INDICATOR_KEYS), "indicator keys are incomplete")
+    observation_dates: list[date] = []
     for key in INDICATOR_KEYS:
         item = indicators[key]
         require(isinstance(item, dict), f"{key} must be an object")
@@ -80,7 +91,58 @@ def validate_latest(payload: object) -> None:
             in {"realtime", "delayed", "manual", "simulated"},
             f"{key}.dataStatus is invalid",
         )
-        validate_iso_date(item.get("asOfDate"), f"{key}.asOfDate")
+        observation_date = validate_iso_date(
+            item.get("asOfDate"), f"{key}.asOfDate"
+        )
+        observation_dates.append(observation_date)
+
+        if require_live:
+            require(
+                item.get("dataStatus") == "delayed",
+                f"{key}.dataStatus must be delayed in live mode",
+            )
+            require(
+                isinstance(item.get("source"), str) and item["source"],
+                f"{key}.source is required in live mode",
+            )
+            require(
+                isinstance(item.get("sourceUrl"), str)
+                and item["sourceUrl"].startswith(("https://", "http://")),
+                f"{key}.sourceUrl is required in live mode",
+            )
+            validation_time = now or datetime.now(timezone.utc)
+            if validation_time.tzinfo is None:
+                validation_time = validation_time.replace(tzinfo=timezone.utc)
+            observation_time = datetime.combine(
+                observation_date, time.min, tzinfo=timezone.utc
+            )
+            age_hours = (
+                validation_time.astimezone(timezone.utc) - observation_time
+            ).total_seconds() / 3600
+            require(age_hours >= 0, f"{key}.asOfDate cannot be in the future")
+            require(
+                age_hours <= LIVE_STALE_HOURS[key],
+                f"{key} exceeds {LIVE_STALE_HOURS[key]} hour freshness limit",
+            )
+
+    if require_live:
+        require(
+            payload.get("dataMode") == "delayed",
+            "latest.dataMode must be delayed in live mode",
+        )
+        require(
+            as_of.astimezone(timezone.utc).date() == min(observation_dates),
+            "latest.asOf must equal the oldest indicator observation date",
+        )
+        require(
+            indicators["hormuz"].get("unit") == "vessels/day",
+            "hormuz.unit must be vessels/day in live mode",
+        )
+        serialized = json.dumps(payload, ensure_ascii=False).lower()
+        require(
+            not any(marker in serialized for marker in FORBIDDEN_LIVE_MARKERS),
+            "live latest.json contains demo, simulated, or manual markers",
+        )
 
 
 def validate_history(payload: object) -> None:
@@ -120,11 +182,23 @@ def validate_events(payload: object) -> None:
         require(isinstance(item.get("sources"), list), "event sources must be an array")
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--require-live",
+        action="store_true",
+        help="Require delayed, traceable, fresh live market data.",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
-    validate_latest(load_json("latest.json"))
+    args = parse_args()
+    validate_latest(load_json("latest.json"), require_live=args.require_live)
     validate_history(load_json("history.json"))
     validate_events(load_json("events.json"))
-    print("Validated latest.json, history.json, and events.json")
+    mode = "live readiness" if args.require_live else "schema"
+    print(f"Validated latest.json, history.json, and events.json ({mode})")
 
 
 if __name__ == "__main__":

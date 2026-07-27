@@ -33,10 +33,12 @@ npm run build
 npm run data:update
 npm run data:update -- --dry-run
 npm run data:backfill
+npm run data:test
 ```
 
 `npm run data:update` 預設使用可重現、非隨機的 demo provider。設定 `DATA_PROVIDER=live` 後會讀取 FRED 與 IMF PortWatch；加上 `--dry-run` 會實際抓取、計算及驗證，但不修改 JSON。
 資料檔修改後另執行 `python3 scripts/validate_data.py`，以獨立驗證器檢查必要欄位、日期、範圍與排序。
+真實資料發布前使用 `python3 scripts/validate_data.py --require-live`，額外阻擋非 delayed、缺少來源 URL、過期、日期不一致或含 demo／simulated／manual 標記的資料。
 
 ## GitHub Pages 啟用
 
@@ -81,6 +83,8 @@ Hormuz 使用 IMF PortWatch 公開的 `Daily_Chokepoints_Data`、`portid=chokepo
 5. 絕不默默改用隨機資料。
 
 Provider 最多嘗試 3 次，每次失敗都有明確 log；不使用無限重試。
+
+當 `DATA_PROVIDER` 不是 `live` 時，六小時排程會直接跳過，不會把 demo 覆蓋到已發布的真實資料。手動 workflow 仍可明確選擇 demo。部署完成後會最多重試三次讀取線上 `data/latest.json`，並確認它與該次部署 revision 的 repository 資料一致；live 模式同時執行完整 live-readiness gate。
 
 前端程式碼不可加入任何 API Key、Token 或 Secret。
 
@@ -164,6 +168,8 @@ compositeZ =
 4. 手動執行一次 `provider=live`、`publish=true`。若上一版是 demo，腳本會把 demo 歷史清除，只保留第一筆真實指數。
 5. 檢查線上 `latest.json` 的 `dataMode=delayed`、四張卡片的 `asOfDate`、來源連結及狀態。
 6. 觀察七天排程；任何來源失敗都應保留整批上一版，不得出現隨機 fallback。
+
+若需要暫停 live 更新，將 `DATA_PROVIDER` 改回 `demo`。排程會停止發布，但網站仍保留最後一份有效真實資料；不要手動執行 demo publish。
 
 `update-data.yml` 每 6 小時執行一次，也支援 `workflow_dispatch`。只有資料變更時才會提交，commit message 為 `chore(data): update TACO market data`。
 

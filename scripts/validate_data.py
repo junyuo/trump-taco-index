@@ -80,6 +80,7 @@ def validate_latest(payload: object) -> None:
             in {"realtime", "delayed", "manual", "simulated"},
             f"{key}.dataStatus is invalid",
         )
+        validate_iso_date(item.get("asOfDate"), f"{key}.asOfDate")
 
 
 def validate_history(payload: object) -> None:

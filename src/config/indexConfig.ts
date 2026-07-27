@@ -4,7 +4,13 @@ export type IndicatorKey = (typeof indicatorKeys)[number]
 
 export const indexConfig = {
   rollingWindow: 60,
-  staleAfterHours: 12,
+  staleAfterHours: 96,
+  indicatorStaleAfterHours: {
+    brent: 96,
+    us10y: 96,
+    hormuz: 240,
+    sp500: 96,
+  } satisfies Record<IndicatorKey, number>,
   weights: {
     brent: 0.3,
     us10y: 0.25,

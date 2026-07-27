@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "data:update": "tsx scripts/fetch-market-data.ts",
+    "data:backfill": "tsx scripts/backfill-history.ts",
     "data:validate": "python3 scripts/validate_data.py"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
 
 一個可部署至 GitHub Pages 的繁體中文靜態金融資料視覺化專案。網站以 Brent 原油、美國 10 年期公債殖利率、荷姆茲海峽通行量與 S&P 500 建立可解釋的代理市場壓力指標，用來觀察市場是否接近過往敘事中的政策轉向區域。
 
-> 本站不是 Signum Global Advisors 官方指數，不預測 Donald Trump 必然改變政策，也不構成投資建議。目前 repository 內的市場數值與事件均為 demo／simulated 示範資料。
+> 本站不是 Signum Global Advisors 官方指數，不預測 Donald Trump 必然改變政策，也不構成投資建議。版本庫預設保留明確標示的 demo 資料；市場指數可由 Actions 切換為真實延遲日資料，事件時間軸目前仍是 demo。
 
 ## 技術與架構
 
@@ -31,9 +31,11 @@ npm run lint
 npm run test
 npm run build
 npm run data:update
+npm run data:update -- --dry-run
+npm run data:backfill
 ```
 
-`npm run data:update` 預設使用可重現、非隨機的 demo provider，不會把模擬數值標成即時行情。
+`npm run data:update` 預設使用可重現、非隨機的 demo provider。設定 `DATA_PROVIDER=live` 後會讀取 FRED 與 IMF PortWatch；加上 `--dry-run` 會實際抓取、計算及驗證，但不修改 JSON。
 資料檔修改後另執行 `python3 scripts/validate_data.py`，以獨立驗證器檢查必要欄位、日期、範圍與排序。
 
 ## GitHub Pages 啟用
@@ -66,14 +68,15 @@ SEO 檔案中的 `USERNAME` 是公開網址 placeholder；上線前請在 `index
 
 在 **Settings → Secrets and variables → Actions** 新增需要的 repository secrets：
 
-- `FRED_API_KEY`：FRED DGS10 資料。
-- `MARKET_API_KEY`：預留給合法授權的 Brent 與 S&P 500 provider。
+- `FRED_API_KEY`：FRED 的 `DCOILBRENTEU`、`DGS10`、`SP500` 三個系列。
 
-在 Actions variables 設定 `DATA_PROVIDER=live` 才會啟用 live 組合 provider。第一版的 `MarketProvider` 故意不綁定任一付費服務；必須先實作符合 `MarketDataAdapter` 的 adapter，才能取得 Brent 與 S&P 500。未設定 provider、Secret、額度不足或 schema 驗證失敗時，腳本會：
+Hormuz 使用 IMF PortWatch 公開的 `Daily_Chokepoints_Data`、`portid=chokepoint6`、`n_total`，不需要憑證。三個 FRED 指標標示為 delayed；Hormuz 也標示為 delayed，單位是 `vessels/day`。前端不會接觸 API Key，也不會把日資料顯示成即時行情。
+
+在 Actions variables 設定 `DATA_PROVIDER=live` 才會讓排程發布真實資料。未設定 Secret、來源失敗、少於「目前值＋前 60 筆」、日期或 schema 驗證失敗時，腳本會：
 
 1. 顯示清楚錯誤並讓 job 失敗。
 2. 不覆蓋最後一份有效 JSON。
-3. 保留既有 `lastSuccessfulUpdate`。
+3. 保留既有 `lastSuccessfulUpdate`，不混用不同更新批次。
 4. 讓前端依時間門檻顯示「資料更新延遲」。
 5. 絕不默默改用隨機資料。
 
@@ -86,11 +89,11 @@ Provider 最多嘗試 3 次，每次失敗都有明確 log；不使用無限重�
 - `public/data/latest.json`：最新指數、四項指標、資料時間及資料狀態。
 - `public/data/history.json`：歷史分數、綜合 Z-score 與各指標 Z-score。
 - `public/data/events.json`：政策威脅、客觀市場反應、後續調整與來源。
-- `data/manual/hormuz-transit.json`：人工維護的荷姆茲通行量。
+- `data/manual/hormuz-transit.json`：保留的人工示範資料；live provider 不會自動 fallback 到此檔。
 
 所有外部 JSON 在前端以 Zod 驗證；格式錯誤會顯示明確錯誤，不會渲染成看似有效的數據。
 
-### 手動更新荷姆茲資料
+### 人工荷姆茲示範資料
 
 1. 編輯 `data/manual/hormuz-transit.json` 的 `observations`。
 2. 日期使用 `YYYY-MM-DD`，數值單位必須與 `metadata.unit` 一致。
@@ -99,7 +102,7 @@ Provider 最多嘗試 3 次，每次失敗都有明確 log；不使用無限重�
 5. 執行 `npm run data:update`、`npm run test` 與 `npm run build`。
 6. 介面固定標示「人工維護／非即時資料」。
 
-目前檔案只有少量示範觀測值；啟用真實 provider 前必須補足資料與可引用來源。
+此檔只供 demo／人工測試；啟用 live 後不會讀取或自動回退至人工值。
 
 ## 指數公式
 
@@ -153,17 +156,33 @@ compositeZ =
 
 每項敘述應分開標示政策事實、市場數據與分析分類。不可把「符合 TACO」寫成已證明的因果關係，也不可直接複製新聞全文。
 
-## 替換 demo data
+## 從 demo 切換為真實延遲資料
 
-1. 先確認資料使用與再發布授權。
-2. 實作 `scripts/providers/marketProvider.ts` 的合法 adapter。
-3. 在 repository secrets 設定憑證，不要寫入 git。
-4. 補足荷姆茲人工資料與引用。
-5. 將 Actions variable `DATA_PROVIDER` 設為 `live`。
-6. 手動執行 **Update TACO market data** workflow。
-7. 檢查 JSON 的 `dataMode`、`dataStatus`、`asOf` 與 `lastSuccessfulUpdate`。
+1. 在 repository secret 設定 `FRED_API_KEY`，Variables 暫時保留 `DATA_PROVIDER=demo`。
+2. 手動執行 **Update TACO market data**，選 `provider=live`、`publish=false`；連續三次 dry-run 成功，並抽查四項來源值與日期。
+3. 將 Actions variable `DATA_PROVIDER` 改為 `live`。
+4. 手動執行一次 `provider=live`、`publish=true`。若上一版是 demo，腳本會把 demo 歷史清除，只保留第一筆真實指數。
+5. 檢查線上 `latest.json` 的 `dataMode=delayed`、四張卡片的 `asOfDate`、來源連結及狀態。
+6. 觀察七天排程；任何來源失敗都應保留整批上一版，不得出現隨機 fallback。
 
 `update-data.yml` 每 6 小時執行一次，也支援 `workflow_dispatch`。只有資料變更時才會提交，commit message 為 `chore(data): update TACO market data`。
+
+### 一次性歷史 backfill
+
+先在本機或受控 workflow 執行：
+
+```bash
+DATA_PROVIDER=live FRED_API_KEY=*** npm run data:backfill
+```
+
+預設只抓取約 18 個月來源資料並驗證最近 252 個 S&P 交易日，不寫檔。確認日期排序、分數範圍與抽樣計算後，再執行：
+
+```bash
+FRED_API_KEY=*** npm run data:backfill -- --publish
+python3 scripts/validate_data.py
+```
+
+Brent 與 10Y 使用同日或之前最近有效值，最大間隔 7 日；Hormuz 最大間隔 3 日。每點只使用該日期以前 60 筆觀測，不使用未來資料。日常排程只新增或取代最新日期。
 
 ## 資料來源授權與引用
 
@@ -172,7 +191,8 @@ compositeZ =
 - 不保存 API Secret、付費回應原文或受限制的完整資料集。
 - 新聞引用只保留標題、來源、發布日期與連結。
 - 歷史市場反應應記錄觀察窗口、時區、單位與調整方式。
-- FRED 系列與第三方市場行情各有獨立授權及 attribution 要求，上線前逐一確認。
+- FRED Brent、10Y 與 S&P 500 各有來源說明；尤其 S&P 500 須保留 FRED 系列頁的版權與再發布提示，本站只公開最新值與衍生統計，不重新發布完整原始序列。
+- Hormuz 引用建議保留「Sources: UN Global Platform; IMF PortWatch (portwatch.imf.org)」，並說明 AIS 可能漏報、延遲或修訂。
 
 ## 免責聲明
 

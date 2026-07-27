@@ -6,6 +6,7 @@ import {
   calculateZScore,
   compositeZToScore,
   getIndexStatus,
+  isIndicatorStale,
   isStale,
   toPressureZ,
   validateWeights,
@@ -95,5 +96,12 @@ describe('freshness', () => {
     const now = new Date('2026-07-27T12:00:00Z')
     expect(isStale('2026-07-26T09:00:00Z', now, 12)).toBe(true)
     expect(isStale('2026-07-27T08:00:00Z', now, 12)).toBe(false)
+  })
+
+  it('市場與 PortWatch 使用不同 freshness 門檻', () => {
+    const now = new Date('2026-07-27T12:00:00Z')
+    expect(isIndicatorStale('brent', '2026-07-22', now)).toBe(true)
+    expect(isIndicatorStale('hormuz', '2026-07-22', now)).toBe(false)
+    expect(isIndicatorStale('hormuz', '2026-07-15', now)).toBe(true)
   })
 })

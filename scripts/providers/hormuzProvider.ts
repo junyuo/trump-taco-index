@@ -33,6 +33,7 @@ export class HormuzProvider {
       label: 'Strait of Hormuz Transit',
       value: values.at(-1)!,
       previousValue: values.at(-2)!,
+      observationDate: payload.observations.at(-1)!.date,
       unit: payload.metadata.unit,
       history: values.slice(0, -1),
       source: `Manual repository dataset／${payload.metadata.notes}`,

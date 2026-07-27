@@ -102,11 +102,23 @@ export function validateWeights(weights: Record<IndicatorKey, number>): true {
 export function isStale(
   asOf: string,
   now = new Date(),
-  staleAfterHours = indexConfig.staleAfterHours,
+  staleAfterHours: number = indexConfig.staleAfterHours,
 ): boolean {
   const timestamp = new Date(asOf).getTime()
   if (!Number.isFinite(timestamp)) {
     throw new TacoIndexError('資料時間格式無效')
   }
   return now.getTime() - timestamp > staleAfterHours * 60 * 60 * 1000
+}
+
+export function isIndicatorStale(
+  key: IndicatorKey,
+  observationDate: string,
+  now = new Date(),
+): boolean {
+  return isStale(
+    `${observationDate}T00:00:00Z`,
+    now,
+    indexConfig.indicatorStaleAfterHours[key],
+  )
 }

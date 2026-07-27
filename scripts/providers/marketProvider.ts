@@ -29,6 +29,7 @@ export class MarketProvider {
       label,
       value: result.current,
       previousValue: result.previous,
+      observationDate: result.asOf.slice(0, 10),
       unit,
       history: result.history,
       source: `Configured market provider (${symbol})`,

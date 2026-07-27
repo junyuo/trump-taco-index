@@ -18,6 +18,7 @@
       "weight": 0.3,
       "contribution": 0.84,
       "source": "Demo data／非真實報價",
+      "asOfDate": "2026-07-26",
       "dataStatus": "simulated"
     },
     "us10y": {
@@ -30,18 +31,20 @@
       "weight": 0.25,
       "contribution": 0.55,
       "source": "Demo data／非真實報價",
+      "asOfDate": "2026-07-26",
       "dataStatus": "simulated"
     },
     "hormuz": {
-      "label": "Strait of Hormuz Transit",
+      "label": "Strait of Hormuz Transit Calls",
       "value": 72,
-      "unit": "index (baseline=100)",
+      "unit": "vessels/day",
       "dailyChangePercent": -6.49,
       "zScore": -3,
       "pressureZ": 3,
       "weight": 0.25,
       "contribution": 0.75,
       "source": "Demo manual dataset／人工維護",
+      "asOfDate": "2026-07-26",
       "dataStatus": "manual"
     },
     "sp500": {
@@ -54,6 +57,7 @@
       "weight": 0.2,
       "contribution": 0.51,
       "source": "Demo data／非真實報價",
+      "asOfDate": "2026-07-26",
       "dataStatus": "simulated"
     }
   }

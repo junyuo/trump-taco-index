@@ -4,6 +4,20 @@ on:
   schedule:
     - cron: '17 */6 * * *'
   workflow_dispatch:
+    inputs:
+      provider:
+        description: Data provider
+        required: true
+        type: choice
+        default: live
+        options:
+          - demo
+          - live
+      publish:
+        description: Publish validated JSON
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -29,13 +43,15 @@ jobs:
         run: npm ci
       - name: Fetch and validate market data
         env:
-          DATA_PROVIDER: ${{ vars.DATA_PROVIDER || 'demo' }}
+          DATA_PROVIDER: ${{ github.event_name == 'workflow_dispatch' && inputs.provider || vars.DATA_PROVIDER || 'demo' }}
+          PUBLISH_DATA: ${{ github.event_name == 'schedule' || inputs.publish }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-          MARKET_API_KEY: ${{ secrets.MARKET_API_KEY }}
         run: npm run data:update
       - name: Validate generated JSON
+        if: ${{ github.event_name == 'schedule' || inputs.publish }}
         run: npm run data:validate
       - name: Commit changed data only
+        if: ${{ github.event_name == 'schedule' || inputs.publish }}
         run: |
           if git diff --quiet -- public/data/latest.json public/data/history.json; then
             echo "No data changes."

@@ -31,11 +31,23 @@ export function DataStatusBanner({ data, stale }: Props) {
     )
   }
 
+  if (data.dataMode === 'delayed') {
+    return (
+      <div className="data-banner live-banner" role="status">
+        <Database aria-hidden="true" size={18} />
+        <div>
+          <strong>真實延遲資料｜DELAYED DATA</strong>
+          <span>四項來源均為日資料；請以各卡片的來源日期與發布狀態為準。</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="data-banner live-banner" role="status">
       <Database aria-hidden="true" size={18} />
       <div>
-        <strong>資料已驗證</strong>
+        <strong>資料來源已通過格式驗證</strong>
         <span>請仍以各資料來源的發布時間與授權條款為準。</span>
       </div>
     </div>

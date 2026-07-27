@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Minus, Radio, Wrench } from 'lucide-react'
-import { formatNumber, formatPercent } from '../lib/format'
+import { formatDate, formatNumber, formatPercent } from '../lib/format'
 import type { LatestData } from '../types/data'
 
 type Indicator = LatestData['indicators']['brent']
@@ -63,7 +63,18 @@ export function IndicatorCard({ indicator, accent }: Props) {
       </dl>
       <div className="indicator-source">
         <StatusIcon aria-hidden="true" size={15} />
-        <span>來源：{indicator.source}</span>
+        <span>
+          來源日期：{formatDate(indicator.asOfDate)}
+          <br />
+          來源：
+          {indicator.sourceUrl ? (
+            <a href={indicator.sourceUrl} target="_blank" rel="noreferrer">
+              {indicator.source}
+            </a>
+          ) : (
+            indicator.source
+          )}
+        </span>
       </div>
     </article>
   )

@@ -14,6 +14,7 @@ export const indicatorSchema = z.object({
   contribution: z.number().finite().nonnegative(),
   source: z.string().min(1),
   sourceUrl: z.string().url().optional(),
+  asOfDate: z.string().date(),
   dataStatus: dataStatusSchema,
 })
 

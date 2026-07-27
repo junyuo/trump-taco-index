@@ -10,9 +10,16 @@ import { IndicatorCard } from './components/IndicatorCard'
 import { Methodology } from './components/Methodology'
 import { loadDashboardData, type DashboardData } from './lib/data'
 import { buildObservationSummary } from './lib/summary'
-import { isStale } from './lib/tacoIndex'
+import { indicatorKeys } from './config/indexConfig'
+import { isIndicatorStale } from './lib/tacoIndex'
 
 const cardAccents = ['#f0b651', '#ee8052', '#d66a43', '#a84955']
+const modeLabels = {
+  live: 'LIVE DATA',
+  delayed: 'DELAYED DATA',
+  manual: 'MANUAL DATA',
+  demo: 'DEMO DATA',
+} as const
 
 function LoadingDashboard() {
   return (
@@ -28,7 +35,9 @@ function LoadingDashboard() {
 }
 
 function Dashboard({ data }: { data: DashboardData }) {
-  const stale = isStale(data.latest.asOf)
+  const stale = indicatorKeys.some((key) =>
+    isIndicatorStale(key, data.latest.indicators[key].asOfDate),
+  )
   const summary = buildObservationSummary(data.latest)
 
   return (
@@ -46,7 +55,7 @@ function Dashboard({ data }: { data: DashboardData }) {
           <a href="#timeline">事件紀錄</a>
           <a href="#methodology">方法論</a>
         </nav>
-        <span className="header-mode"><i aria-hidden="true" /> DEMO DATA</span>
+        <span className="header-mode"><i aria-hidden="true" /> {modeLabels[data.latest.dataMode]}</span>
       </header>
 
       <main id="top">

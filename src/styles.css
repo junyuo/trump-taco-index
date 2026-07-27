@@ -139,7 +139,7 @@ main { width: min(1440px, calc(100% - 56px)); margin: 0 auto; }
 .signal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .indicator-card h3 { margin: 15px 0 8px; color: #e3e7e4; font: 600 12px/1.3 var(--mono); }
 .indicator-value-row { display: flex; align-items: baseline; gap: 8px; }
-.indicator-value-row strong { min-width: 0; font: 500 clamp(28px, 2.6vw, 42px)/1 var(--mono); letter-spacing: -.06em; }
+.indicator-value-row strong { min-width: 0; font: 500 clamp(28px, 2.6vw, 42px)/1 var(--mono); letter-spacing: -.06em; text-align: right; font-variant-numeric: tabular-nums; }
 .indicator-value-row span { color: var(--muted); font: 400 9px/1 var(--mono); white-space: nowrap; }
 .daily-change { display: flex; align-items: center; gap: 5px; margin: 12px 0 22px; font: 500 10px/1 var(--mono); }
 .daily-change.positive { color: #e18b66; }
@@ -147,9 +147,11 @@ main { width: min(1440px, calc(100% - 56px)); margin: 0 auto; }
 .indicator-metrics { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
 .indicator-metrics div { padding: 11px 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .indicator-metrics dt { color: var(--muted); font-size: 9px; }
-.indicator-metrics dd { margin: 4px 0 0; font: 500 13px/1 var(--mono); color: #e6e9e6; }
+.indicator-metrics dd { margin: 4px 0 0; font: 500 13px/1 var(--mono); color: #e6e9e6; text-align: right; font-variant-numeric: tabular-nums; }
 .indicator-source { display: flex; gap: 6px; align-items: start; margin-top: 13px; color: #6f7a80; font-size: 9px; line-height: 1.4; }
 .indicator-source svg { flex: 0 0 auto; }
+.indicator-source a { color: inherit; text-decoration-color: #596970; text-underline-offset: 2px; }
+.indicator-source a:hover, .indicator-source a:focus-visible { color: #b9c3c7; }
 
 .chart-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, .8fr); gap: 16px; margin-bottom: 16px; }
 .panel { min-width: 0; padding: 28px; border: 1px solid var(--line); background: rgba(14,20,24,.88); }

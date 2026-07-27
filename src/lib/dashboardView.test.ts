@@ -3,6 +3,7 @@ import { getIndexStatus } from './tacoIndex'
 import {
   getDailyPressureImpact,
   getHistoryCoverage,
+  getHistoryStats,
   getThresholdDistance,
   isHistoryRangeAvailable,
 } from './dashboardView'
@@ -57,5 +58,29 @@ describe('dashboard view helpers', () => {
     })
     expect(isHistoryRangeAvailable(history, 31)).toBe(true)
     expect(isHistoryRangeAvailable(history, 92)).toBe(false)
+  })
+
+  it('summarizes history thresholds, average, and latest percentile', () => {
+    const history = [
+      historyItem('2026-01-01', 20),
+      historyItem('2026-01-02', 70),
+      historyItem('2026-01-03', 85),
+      historyItem('2026-01-04', 40),
+    ]
+    expect(getHistoryStats(history)).toEqual({
+      maximumScore: 85,
+      averageScore: 53.75,
+      warningDays: 2,
+      criticalDays: 1,
+      latestPercentile: 50,
+    })
+    expect(getHistoryStats([])).toBeNull()
+  })
+
+  it('treats 252 trading observations as one year', () => {
+    const history = Array.from({ length: 252 }, (_, index) =>
+      historyItem(new Date(Date.UTC(2025, 0, index + 1)).toISOString().slice(0, 10)),
+    )
+    expect(isHistoryRangeAvailable(history, 366)).toBe(true)
   })
 })

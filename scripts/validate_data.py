@@ -145,14 +145,16 @@ def validate_latest(
         )
 
 
-def validate_history(payload: object) -> None:
+def validate_history(payload: object, *, require_backfill: bool = False) -> None:
     require(isinstance(payload, list), "history.json must contain an array")
+    if require_backfill:
+        require(len(payload) == 252, "history.json must contain exactly 252 points")
     previous_date = ""
     for position, item in enumerate(payload):
         require(isinstance(item, dict), f"history[{position}] must be an object")
         item_date = item.get("date")
         validate_iso_date(item_date, f"history[{position}].date")
-        require(item_date >= previous_date, "history must be sorted by date")
+        require(item_date > previous_date, "history dates must be strictly increasing")
         previous_date = item_date
         score = finite_number(item.get("score"), f"history[{position}].score")
         require(0 <= score <= 100, f"history[{position}].score must be 0..100")
@@ -189,15 +191,38 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Require delayed, traceable, fresh live market data.",
     )
+    parser.add_argument(
+        "--require-backfill",
+        action="store_true",
+        help="Require exactly 252 strictly ordered history points.",
+    )
+    parser.add_argument(
+        "--history-file",
+        type=Path,
+        help="Validate a candidate history file instead of public/data/history.json.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     validate_latest(load_json("latest.json"), require_live=args.require_live)
-    validate_history(load_json("history.json"))
+    history = (
+        json.loads(args.history_file.read_text(encoding="utf-8"))
+        if args.history_file
+        else load_json("history.json")
+    )
+    validate_history(history, require_backfill=args.require_backfill)
     validate_events(load_json("events.json"))
-    mode = "live readiness" if args.require_live else "schema"
+    modes = [
+        label
+        for enabled, label in (
+            (args.require_live, "live readiness"),
+            (args.require_backfill, "252-point backfill"),
+        )
+        if enabled
+    ]
+    mode = " + ".join(modes) or "schema"
     print(f"Validated latest.json, history.json, and events.json ({mode})")
 
 

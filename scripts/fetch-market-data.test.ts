@@ -26,6 +26,21 @@ describe('data update publication rules', () => {
     ])
   })
 
+  it('日常更新固定保留最近 252 個交易日', () => {
+    const history = Array.from({ length: 260 }, (_, index) => ({
+      ...demoEntry,
+      date: new Date(Date.UTC(2025, 0, index + 1)).toISOString().slice(0, 10),
+    }))
+    const next = createNextHistory(
+      history,
+      'delayed',
+      'delayed',
+      { ...demoEntry, date: '2026-01-01' },
+    )
+    expect(next).toHaveLength(252)
+    expect(next.at(-1)!.date).toBe('2026-01-01')
+  })
+
   it('相同來源日期與數值不視為新批次', () => {
     const indicator = {
       label: 'fixture',

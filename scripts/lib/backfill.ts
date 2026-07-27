@@ -16,6 +16,17 @@ export interface BackfillSeries {
   sp500: TimeSeriesPoint[]
 }
 
+function validateSeries(points: TimeSeriesPoint[], key: keyof BackfillSeries): void {
+  if (points.length === 0) throw new Error(`${key} 歷史序列不得為空`)
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index]
+    if (!Number.isFinite(point.value)) throw new Error(`${key} 包含非有限數值`)
+    if (index > 0 && points[index - 1].date >= point.date) {
+      throw new Error(`${key} 日期必須嚴格遞增且不得重複`)
+    }
+  }
+}
+
 export function findAsOfPoint(
   points: TimeSeriesPoint[],
   targetDate: string,
@@ -48,6 +59,9 @@ export function buildBackfillHistory(
   series: BackfillSeries,
   targetCount = 252,
 ): HistoryItem[] {
+  for (const key of Object.keys(series) as (keyof BackfillSeries)[]) {
+    validateSeries(series[key], key)
+  }
   const entries: HistoryItem[] = []
   for (const spPoint of series.sp500) {
     const brentZ = calculateAsOfZ(series.brent, spPoint.date, 7)
@@ -78,4 +92,8 @@ export function buildBackfillHistory(
     throw new Error(`可建立的真實歷史不足：需要 ${targetCount} 筆，實際 ${entries.length} 筆`)
   }
   return historyDataSchema.parse(entries.slice(-targetCount))
+}
+
+export function buildLatestAlignedHistoryItem(series: BackfillSeries): HistoryItem {
+  return buildBackfillHistory(series, 1)[0]
 }

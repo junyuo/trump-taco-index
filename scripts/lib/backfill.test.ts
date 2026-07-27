@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { buildBackfillHistory, findAsOfPoint } from './backfill'
+import {
+  buildBackfillHistory,
+  buildLatestAlignedHistoryItem,
+  findAsOfPoint,
+} from './backfill'
 import type { TimeSeriesPoint } from '../providers/types'
 
 function dailySeries(length: number, offset = 0): TimeSeriesPoint[] {
@@ -31,5 +35,17 @@ describe('historical backfill', () => {
     expect(history).toHaveLength(252)
     expect(history[0].date < history.at(-1)!.date).toBe(true)
     expect(history.every((item) => item.score >= 0 && item.score <= 100)).toBe(true)
+    expect(buildLatestAlignedHistoryItem(series)).toEqual(history.at(-1))
+  })
+
+  it('拒絕重複或亂序來源日期', () => {
+    const points = dailySeries(380)
+    const duplicate = [...points, points.at(-1)!]
+    expect(() => buildBackfillHistory({
+      brent: duplicate,
+      us10y: points,
+      hormuz: points,
+      sp500: points,
+    })).toThrow('嚴格遞增')
   })
 })

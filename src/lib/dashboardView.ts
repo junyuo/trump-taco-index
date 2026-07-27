@@ -63,5 +63,29 @@ export function getHistoryCoverage(history: HistoryItem[]): HistoryCoverage {
 
 export function isHistoryRangeAvailable(history: HistoryItem[], days: number): boolean {
   const coverage = getHistoryCoverage(history)
+  if (days === 366 && coverage.pointCount >= 252) return true
   return coverage.pointCount >= 2 && coverage.coverageDays >= Math.max(1, days - 7)
+}
+
+export interface HistoryStats {
+  maximumScore: number
+  averageScore: number
+  warningDays: number
+  criticalDays: number
+  latestPercentile: number
+}
+
+export function getHistoryStats(history: HistoryItem[]): HistoryStats | null {
+  if (history.length === 0) return null
+  const scores = history.map((item) => item.score)
+  const latestScore = scores.at(-1)!
+  return {
+    maximumScore: Math.max(...scores),
+    averageScore: scores.reduce((sum, score) => sum + score, 0) / scores.length,
+    warningDays: scores.filter((score) => score >= 70).length,
+    criticalDays: scores.filter((score) => score >= 85).length,
+    latestPercentile: Math.round(
+      (scores.filter((score) => score <= latestScore).length / scores.length) * 100,
+    ),
+  }
 }

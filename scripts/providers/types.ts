@@ -23,6 +23,7 @@ export interface ProviderSnapshot {
   asOf: string
   mode: 'live' | 'delayed' | 'manual' | 'demo'
   observations: Record<ProviderIndicatorKey, ProviderObservation>
+  series?: Record<ProviderIndicatorKey, TimeSeriesPoint[]>
 }
 
 export interface DataProvider {

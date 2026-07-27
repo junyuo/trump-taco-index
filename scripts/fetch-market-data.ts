@@ -14,6 +14,7 @@ import { assertLiveReadiness } from './liveReadiness'
 import { DemoProvider } from './providers/demoProvider'
 import { LiveProvider } from './providers/liveProvider'
 import type { DataProvider, ProviderSnapshot } from './providers/types'
+import { buildLatestAlignedHistoryItem } from './lib/backfill'
 
 const latestPath = resolve('public/data/latest.json')
 const historyPath = resolve('public/data/history.json')
@@ -72,7 +73,7 @@ export function createNextHistory(
   return historyDataSchema.parse(
     [...base.filter((item) => item.date !== entry.date), entry]
       .sort((left, right) => left.date.localeCompare(right.date))
-      .slice(-400),
+      .slice(-252),
   )
 }
 
@@ -153,15 +154,17 @@ async function main() {
     assertLiveReadiness(latest, new Date(successfulUpdate))
   }
   const history = historyDataSchema.parse(JSON.parse(await readFile(historyPath, 'utf8')))
-  const entry: HistoryItem = {
-    date: snapshot.asOf.slice(0, 10),
-    score,
-    compositeZ,
-    brentZ: zScores.brent,
-    us10yZ: zScores.us10y,
-    hormuzZ: zScores.hormuz,
-    sp500Z: zScores.sp500,
-  }
+  const entry: HistoryItem = snapshot.series
+    ? buildLatestAlignedHistoryItem(snapshot.series)
+    : {
+        date: snapshot.asOf.slice(0, 10),
+        score,
+        compositeZ,
+        brentZ: zScores.brent,
+        us10yZ: zScores.us10y,
+        hormuzZ: zScores.hormuz,
+        sp500Z: zScores.sp500,
+      }
   const nextHistory = createNextHistory(history, previousLatest.dataMode, latest.dataMode, entry)
 
   for (const key of indicatorKeys) {

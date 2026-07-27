@@ -17,4 +17,21 @@ describe('GitHub Actions data safety', () => {
       'python3 scripts/smoke_deployment.py --base-url "$PAGE_URL" --require-live',
     )
   })
+
+  it('backfill 先產生 artifact、驗證 252 筆且只提交 history', () => {
+    const backfillWorkflow = readFileSync('.github/workflows/backfill-history.yml', 'utf8')
+    expect(backfillWorkflow).toContain('group: market-data-write')
+    expect(backfillWorkflow).toContain('default: false')
+    expect(backfillWorkflow).toContain('actions/upload-artifact@v4')
+    expect(backfillWorkflow).toContain('Require two matching prior successful candidates')
+    expect(backfillWorkflow).toContain('include-hidden-files: true')
+    expect(backfillWorkflow).toContain('--require-backfill')
+    expect(backfillWorkflow).toContain('git add public/data/history.json')
+    expect(backfillWorkflow).not.toContain('git add public/data/latest.json')
+  })
+
+  it('排程與 backfill 共用資料寫入 concurrency group', () => {
+    const updateWorkflow = readFileSync('.github/workflows/update-data.yml', 'utf8')
+    expect(updateWorkflow).toContain('group: market-data-write')
+  })
 })

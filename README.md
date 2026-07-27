@@ -175,20 +175,36 @@ compositeZ =
 
 ### 一次性歷史 backfill
 
-先在本機或受控 workflow 執行：
+建議從 Actions 手動執行 **Backfill TACO history**，保留 `publish=false`。Workflow 會產生候選
+`history.json`、稽核報告與 SHA-256 artifact，但不修改公開資料。連續兩次 dry-run 的候選
+SHA-256 相同，且首／中／末抽樣點完成核對後，才以 `publish=true` 正式發布。發布 workflow
+會自動下載前兩次成功 run 的 artifact；若兩次候選 SHA-256 未與本次一致，commit gate 會失敗。
+
+本機 dry-run 可使用：
 
 ```bash
 DATA_PROVIDER=live FRED_API_KEY=*** npm run data:backfill
 ```
 
-預設只抓取約 18 個月來源資料並驗證最近 252 個 S&P 交易日，不寫檔。確認日期排序、分數範圍與抽樣計算後，再執行：
+若需要保留本機候選檔與報告：
 
 ```bash
-FRED_API_KEY=*** npm run data:backfill -- --publish
-python3 scripts/validate_data.py
+DATA_PROVIDER=live FRED_API_KEY=*** npm run data:backfill -- \
+  --output .backfill/history.json \
+  --report .backfill/report.json
+python3 scripts/validate_data.py \
+  --require-live \
+  --require-backfill \
+  --history-file .backfill/history.json
 ```
 
-Brent 與 10Y 使用同日或之前最近有效值，最大間隔 7 日；Hormuz 最大間隔 3 日。每點只使用該日期以前 60 筆觀測，不使用未來資料。日常排程只新增或取代最新日期。
+正式 workflow 只提交 `public/data/history.json`，由既有 Pages workflow 部署並比對遠端
+`latest.json` 與 `history.json`。Backfill 與六小時更新共用同一 concurrency group，避免同時寫入。
+
+Brent 與 10Y 使用 S&P 交易日當天或之前最近有效值，最大間隔 7 日；Hormuz 最大間隔 3 日。
+每點只使用該日期以前 60 筆觀測，不使用未來資料。歷史固定保留最近 252 個交易日；日常排程使用
+同一套日期對齊規則，只新增或取代最新合格交易日。首頁最新分數使用各來源最新延遲觀測，歷史圖
+則採同步交易日計算，兩者資料日期語意不同。
 
 ## 資料來源授權與引用
 

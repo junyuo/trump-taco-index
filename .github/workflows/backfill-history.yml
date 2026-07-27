@@ -1,0 +1,130 @@
+name: Backfill TACO history
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the validated 252-point history
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: market-data-write
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    env:
+      DATA_PROVIDER: live
+    steps:
+      - name: Require live repository mode
+        env:
+          REPOSITORY_DATA_PROVIDER: ${{ vars.DATA_PROVIDER || 'demo' }}
+        run: |
+          if [ "$REPOSITORY_DATA_PROVIDER" != "live" ]; then
+            echo "DATA_PROVIDER repository variable must be live."
+            exit 1
+          fi
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build candidate and audit report
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          PUBLISH_HISTORY: ${{ inputs.publish }}
+        run: |
+          mkdir -p .backfill
+          if [ "$PUBLISH_HISTORY" = "true" ]; then
+            npm run data:backfill -- \
+              --publish \
+              --output .backfill/history.json \
+              --report .backfill/report.json
+          else
+            npm run data:backfill -- \
+              --output .backfill/history.json \
+              --report .backfill/report.json
+          fi
+      - name: Validate candidate
+        run: |
+          python3 scripts/validate_data.py \
+            --require-live \
+            --require-backfill \
+            --history-file .backfill/history.json
+      - name: Add report to workflow summary
+        run: |
+          echo '## TACO history backfill audit' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat .backfill/report.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload candidate and audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: taco-history-backfill-${{ github.run_id }}
+          path: .backfill
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
+      - name: Require two matching prior successful candidates
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current_sha="$(jq -r '.candidateSha256' .backfill/report.json)"
+          matched=0
+          for run_id in $(gh run list \
+            --workflow backfill-history.yml \
+            --status success \
+            --limit 10 \
+            --json databaseId \
+            --jq '.[].databaseId'); do
+            prior_dir="$RUNNER_TEMP/backfill-prior-$run_id"
+            if ! gh run download "$run_id" \
+              --pattern 'taco-history-backfill-*' \
+              --dir "$prior_dir"; then
+              continue
+            fi
+            prior_report="$(find "$prior_dir" -name report.json -type f -print -quit)"
+            if [ -n "$prior_report" ] && \
+              [ "$(jq -r '.candidateSha256' "$prior_report")" = "$current_sha" ]; then
+              matched=$((matched + 1))
+              echo "Matching candidate: run $run_id"
+            fi
+            if [ "$matched" -ge 2 ]; then
+              break
+            fi
+          done
+          if [ "$matched" -lt 2 ]; then
+            echo "Publish requires two prior successful runs with SHA-256 $current_sha."
+            exit 1
+          fi
+      - name: Validate published history
+        if: ${{ inputs.publish }}
+        run: |
+          python3 scripts/validate_data.py --require-live --require-backfill
+          cmp .backfill/history.json public/data/history.json
+      - name: Commit history only
+        if: ${{ inputs.publish }}
+        run: |
+          if git diff --quiet -- public/data/history.json; then
+            echo "No history changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/history.json
+          git commit -m "chore(data): backfill TACO history"
+          git push

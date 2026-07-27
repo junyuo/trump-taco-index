@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from smoke_deployment import run_smoke
-from validate_data import load_json, validate_latest
+from validate_data import load_json, validate_history, validate_latest
 
 
 NOW = datetime(2026, 7, 27, 12, tzinfo=timezone.utc)
@@ -99,24 +99,59 @@ class LiveValidationTests(unittest.TestCase):
         self.assertEqual(len(attempts), 3)
 
     def test_smoke_accepts_matching_repository_data(self) -> None:
-        expected = load_json("latest.json")
+        expected_latest = load_json("latest.json")
+        expected_history = load_json("history.json")
         run_smoke(
             "https://example.com/project/",
             require_live=False,
-            fetcher=lambda _: expected,
+            fetcher=lambda url: (
+                expected_history if "history.json" in url else expected_latest
+            ),
             sleeper=lambda _: None,
         )
 
     def test_smoke_rejects_remote_mismatch(self) -> None:
         remote = copy.deepcopy(load_json("latest.json"))
         remote["index"]["score"] = remote["index"]["score"] + 1
+        expected_history = load_json("history.json")
         with self.assertRaisesRegex(RuntimeError, "3 attempts"):
             run_smoke(
                 "https://example.com/project/",
                 require_live=False,
-                fetcher=lambda _: remote,
+                fetcher=lambda url: (
+                    expected_history if "history.json" in url else remote
+                ),
                 sleeper=lambda _: None,
             )
+
+    def test_smoke_rejects_remote_history_mismatch(self) -> None:
+        expected_latest = load_json("latest.json")
+        remote_history = copy.deepcopy(load_json("history.json"))
+        remote_history[0]["score"] = remote_history[0]["score"] + 1
+        with self.assertRaisesRegex(RuntimeError, "3 attempts"):
+            run_smoke(
+                "https://example.com/project/",
+                require_live=False,
+                fetcher=lambda url: (
+                    remote_history if "history.json" in url else expected_latest
+                ),
+                sleeper=lambda _: None,
+            )
+
+    def test_backfill_requires_252_unique_ordered_points(self) -> None:
+        point = {
+            "date": "2026-01-01",
+            "score": 1,
+            "compositeZ": 0.1,
+            "brentZ": 0.1,
+            "us10yZ": 0.1,
+            "hormuzZ": 0.1,
+            "sp500Z": 0.1,
+        }
+        with self.assertRaisesRegex(ValueError, "252"):
+            validate_history([point], require_backfill=True)
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            validate_history([point, copy.deepcopy(point)])
 
 
 if __name__ == "__main__":

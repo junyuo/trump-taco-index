@@ -9,7 +9,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { getHistoryCoverage, isHistoryRangeAvailable } from '../lib/dashboardView'
+import {
+  getHistoryCoverage,
+  getHistoryStats,
+  isHistoryRangeAvailable,
+} from '../lib/dashboardView'
 import { formatDate } from '../lib/format'
 import { getIndexStatus } from '../lib/tacoIndex'
 import type { HistoryItem, TacoEvent } from '../types/data'
@@ -43,7 +47,9 @@ function ChartTooltip({
   const item = payload[0].payload
   const status = getIndexStatus(item.score)
   const matchedEvents = events.filter(
-    (event) => event.threatDate === item.date || event.pivotDate === item.date,
+    (event) =>
+      event.sources.length > 0 &&
+      (event.threatDate === item.date || event.pivotDate === item.date),
   )
 
   return (
@@ -72,6 +78,7 @@ export function HistoryChart({ history, events }: Props) {
   }, [history, rangeDays])
   const latest = history.at(-1)
   const latestStatus = latest ? getIndexStatus(latest.score) : null
+  const stats = getHistoryStats(filteredHistory)
 
   return (
     <section className="panel chart-panel" aria-labelledby="history-title">
@@ -151,6 +158,15 @@ export function HistoryChart({ history, events }: Props) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          {stats && (
+            <dl className="history-stats" aria-label="所選期間歷史統計">
+              <div><dt>期間最高</dt><dd>{stats.maximumScore.toFixed(0)} 分</dd></div>
+              <div><dt>期間平均</dt><dd>{stats.averageScore.toFixed(1)} 分</dd></div>
+              <div><dt>≥ 70 分</dt><dd>{stats.warningDays} 日</dd></div>
+              <div><dt>≥ 85 分</dt><dd>{stats.criticalDays} 日</dd></div>
+              <div><dt>最新百分位</dt><dd>{stats.latestPercentile}%</dd></div>
+            </dl>
+          )}
           {latest && latestStatus && (
             <p className="chart-text-summary">
               最新觀測為 {formatDate(latest.date)}，指數 {latest.score} 分，狀態為
@@ -163,6 +179,9 @@ export function HistoryChart({ history, events }: Props) {
         <span><i className="legend-line warning" />70 分 TACO 警戒</span>
         <span><i className="legend-line critical" />85 分 TACO 時刻</span>
       </div>
+      <p className="history-method-note">
+        歷史分數採 S&amp;P 500 交易日同步對齊；首頁最新分數使用各來源最新延遲觀測，兩者資料日期語意不同。
+      </p>
     </section>
   )
 }

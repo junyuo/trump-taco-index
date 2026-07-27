@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import Any
 from urllib.request import Request, urlopen
 
-from validate_data import load_json, validate_latest
+from validate_data import load_json, validate_history, validate_latest
 
 MAX_ATTEMPTS = 3
 
@@ -30,20 +30,33 @@ def run_smoke(
     fetcher: Callable[[str], Any] = fetch_json,
     sleeper: Callable[[float], None] = time.sleep,
 ) -> None:
-    expected = load_json("latest.json")
-    validate_latest(expected, require_live=require_live)
-    endpoint = f"{base_url.rstrip('/')}/data/latest.json"
+    expected_latest = load_json("latest.json")
+    expected_history = load_json("history.json")
+    validate_latest(expected_latest, require_live=require_live)
+    validate_history(expected_history)
+    latest_endpoint = f"{base_url.rstrip('/')}/data/latest.json"
+    history_endpoint = f"{base_url.rstrip('/')}/data/history.json"
     last_error: Exception | None = None
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
-            remote = fetcher(f"{endpoint}?smoke={int(time.time())}")
-            validate_latest(remote, require_live=require_live)
-            if remote != expected:
+            cache_buster = int(time.time())
+            remote_latest = fetcher(f"{latest_endpoint}?smoke={cache_buster}")
+            remote_history = fetcher(f"{history_endpoint}?smoke={cache_buster}")
+            validate_latest(remote_latest, require_live=require_live)
+            validate_history(remote_history)
+            if remote_latest != expected_latest:
                 raise ValueError(
                     "deployed latest.json does not match the repository copy"
                 )
-            print(f"Deployment smoke passed on attempt {attempt}: {endpoint}")
+            if remote_history != expected_history:
+                raise ValueError(
+                    "deployed history.json does not match the repository copy"
+                )
+            print(
+                f"Deployment smoke passed on attempt {attempt}: "
+                f"{latest_endpoint} and {history_endpoint}"
+            )
             return
         except Exception as error:  # noqa: BLE001 - bounded retry logs any failure
             last_error = error

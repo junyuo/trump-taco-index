@@ -1,0 +1,64 @@
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import type { LatestData } from '../types/data'
+
+const names: Record<keyof LatestData['indicators'], string> = {
+  brent: 'Brent 原油',
+  us10y: '美國 10Y',
+  hormuz: '荷姆茲通行量',
+  sp500: 'S&P 500',
+}
+
+const colors = ['#f0b651', '#ee8052', '#dc5b38', '#a84955']
+
+export function ContributionChart({ latest }: { latest: LatestData }) {
+  const data = Object.entries(latest.indicators)
+    .map(([key, item]) => ({
+      name: names[key as keyof LatestData['indicators']],
+      contribution: item.contribution,
+    }))
+    .sort((left, right) => right.contribution - left.contribution)
+
+  return (
+    <section className="panel contribution-panel" aria-labelledby="contribution-title">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">WHAT MOVES THE INDEX</span>
+          <h2 id="contribution-title">壓力貢獻</h2>
+        </div>
+        <span className="unit-label">加權標準差 σ</span>
+      </div>
+      <div className="contribution-chart" aria-label="四項指標壓力貢獻水平長條圖">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 18, left: 10, bottom: 0 }}>
+            <CartesianGrid stroke="#263038" strokeDasharray="3 5" horizontal={false} />
+            <XAxis type="number" stroke="#7f8b92" tickLine={false} axisLine={false} />
+            <YAxis type="category" dataKey="name" width={104} stroke="#aeb7bc" tickLine={false} axisLine={false} />
+            <Tooltip
+              cursor={{ fill: 'rgba(255,255,255,.03)' }}
+              formatter={(value) => [
+                typeof value === 'number' ? `${value.toFixed(2)}σ` : '—',
+                '加權貢獻',
+              ]}
+              contentStyle={{ background: '#11181d', border: '1px solid #354048', borderRadius: 8 }}
+            />
+            <Bar dataKey="contribution" radius={[0, 5, 5, 0]} barSize={18}>
+              {data.map((item, index) => (
+                <Cell fill={colors[index]} key={item.name} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="panel-note">貢獻＝方向調整後的壓力 Z-score × 代理權重。</p>
+    </section>
+  )
+}

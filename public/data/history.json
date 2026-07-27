@@ -1,0 +1,19 @@
+[
+  { "date": "2025-08-01", "score": 19, "compositeZ": 0.63, "brentZ": 0.4, "us10yZ": 0.3, "hormuzZ": 0.2, "sp500Z": -0.8 },
+  { "date": "2025-09-01", "score": 24, "compositeZ": 0.8, "brentZ": 0.6, "us10yZ": 0.5, "hormuzZ": -0.4, "sp500Z": -1.1 },
+  { "date": "2025-10-01", "score": 31, "compositeZ": 1.03, "brentZ": 0.8, "us10yZ": 0.8, "hormuzZ": -0.6, "sp500Z": -1.2 },
+  { "date": "2025-11-01", "score": 28, "compositeZ": 0.93, "brentZ": 0.5, "us10yZ": 0.6, "hormuzZ": -0.8, "sp500Z": -1.1 },
+  { "date": "2025-12-01", "score": 36, "compositeZ": 1.2, "brentZ": 0.9, "us10yZ": 1.1, "hormuzZ": -1.2, "sp500Z": -1.3 },
+  { "date": "2026-01-01", "score": 32, "compositeZ": 1.07, "brentZ": 0.7, "us10yZ": 1, "hormuzZ": -1, "sp500Z": -1.2 },
+  { "date": "2026-02-01", "score": 42, "compositeZ": 1.4, "brentZ": 1.4, "us10yZ": 1.2, "hormuzZ": -1.3, "sp500Z": -1.4 },
+  { "date": "2026-03-01", "score": 47, "compositeZ": 1.57, "brentZ": 1.7, "us10yZ": 1.4, "hormuzZ": -1.4, "sp500Z": -1.6 },
+  { "date": "2026-04-01", "score": 52, "compositeZ": 1.73, "brentZ": 1.9, "us10yZ": 1.5, "hormuzZ": -1.6, "sp500Z": -1.7 },
+  { "date": "2026-05-01", "score": 58, "compositeZ": 1.93, "brentZ": 2.1, "us10yZ": 1.8, "hormuzZ": -1.8, "sp500Z": -1.9 },
+  { "date": "2026-06-01", "score": 64, "compositeZ": 2.14, "brentZ": 2.2, "us10yZ": 1.9, "hormuzZ": -2.3, "sp500Z": -2 },
+  { "date": "2026-06-15", "score": 69, "compositeZ": 2.32, "brentZ": 2.5, "us10yZ": 2, "hormuzZ": -2.5, "sp500Z": -2.2 },
+  { "date": "2026-07-01", "score": 67, "compositeZ": 2.24, "brentZ": 2.3, "us10yZ": 2.1, "hormuzZ": -2.4, "sp500Z": -2.15 },
+  { "date": "2026-07-08", "score": 72, "compositeZ": 2.43, "brentZ": 2.5, "us10yZ": 2.1, "hormuzZ": -2.7, "sp500Z": -2.4 },
+  { "date": "2026-07-15", "score": 76, "compositeZ": 2.57, "brentZ": 2.7, "us10yZ": 2.2, "hormuzZ": -2.9, "sp500Z": -2.5 },
+  { "date": "2026-07-22", "score": 82, "compositeZ": 2.78, "brentZ": 3, "us10yZ": 2.4, "hormuzZ": -3.1, "sp500Z": -2.7 },
+  { "date": "2026-07-26", "score": 78, "compositeZ": 2.65, "brentZ": 2.8, "us10yZ": 2.2, "hormuzZ": -3, "sp500Z": -2.55 }
+]

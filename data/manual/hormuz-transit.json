@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "Strait of Hormuz Transit Volume",
+    "maintainedBy": "Repository maintainers",
+    "dataStatus": "manual",
+    "isRealtime": false,
+    "unit": "index (baseline=100)",
+    "notes": "第一版人工維護示範資料。發布前請加入可引用的資料來源與授權資訊。"
+  },
+  "observations": [
+    { "date": "2026-07-21", "value": 78, "source": "Demo manual entry" },
+    { "date": "2026-07-22", "value": 77, "source": "Demo manual entry" },
+    { "date": "2026-07-23", "value": 75, "source": "Demo manual entry" },
+    { "date": "2026-07-24", "value": 74, "source": "Demo manual entry" },
+    { "date": "2026-07-25", "value": 73, "source": "Demo manual entry" },
+    { "date": "2026-07-26", "value": 72, "source": "Demo manual entry" }
+  ]
+}

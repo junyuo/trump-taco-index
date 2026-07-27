@@ -1,0 +1,60 @@
+{
+  "asOf": "2026-07-26T09:00:00Z",
+  "lastSuccessfulUpdate": "2026-07-26T09:00:00Z",
+  "dataMode": "demo",
+  "index": {
+    "score": 78,
+    "compositeZ": 2.65,
+    "status": "TACO 警戒"
+  },
+  "indicators": {
+    "brent": {
+      "label": "Brent Crude",
+      "value": 96.78,
+      "unit": "USD/barrel",
+      "dailyChangePercent": 3.88,
+      "zScore": 2.8,
+      "pressureZ": 2.8,
+      "weight": 0.3,
+      "contribution": 0.84,
+      "source": "Demo data／非真實報價",
+      "dataStatus": "simulated"
+    },
+    "us10y": {
+      "label": "US 10Y Treasury",
+      "value": 4.72,
+      "unit": "%",
+      "dailyChangePercent": 1.14,
+      "zScore": 2.2,
+      "pressureZ": 2.2,
+      "weight": 0.25,
+      "contribution": 0.55,
+      "source": "Demo data／非真實報價",
+      "dataStatus": "simulated"
+    },
+    "hormuz": {
+      "label": "Strait of Hormuz Transit",
+      "value": 72,
+      "unit": "index (baseline=100)",
+      "dailyChangePercent": -6.49,
+      "zScore": -3,
+      "pressureZ": 3,
+      "weight": 0.25,
+      "contribution": 0.75,
+      "source": "Demo manual dataset／人工維護",
+      "dataStatus": "manual"
+    },
+    "sp500": {
+      "label": "S&P 500",
+      "value": 6028.41,
+      "unit": "points",
+      "dailyChangePercent": -2.12,
+      "zScore": -2.55,
+      "pressureZ": 2.55,
+      "weight": 0.2,
+      "contribution": 0.51,
+      "source": "Demo data／非真實報價",
+      "dataStatus": "simulated"
+    }
+  }
+}

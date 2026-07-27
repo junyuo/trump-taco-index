@@ -1,0 +1,30 @@
+[
+  {
+    "id": "event-template-001",
+    "threatDate": "2025-04-02",
+    "pivotDate": "2025-04-09",
+    "category": "tariff",
+    "title": "關稅政策調整事件（示範欄位）",
+    "threatSummary": "Demo：請在發布前填入經一手來源驗證的政策內容。",
+    "pivotSummary": "Demo：請填入經驗證的延後、縮小、豁免或撤回措施。",
+    "marketReaction": "Demo：請填入同一觀察期間的客觀市場變化與數據來源。",
+    "daysToPivot": 7,
+    "tacoClassification": "possible",
+    "confidence": "low",
+    "sources": []
+  },
+  {
+    "id": "event-template-002",
+    "threatDate": "2026-06-12",
+    "pivotDate": null,
+    "category": "trade",
+    "title": "待查證政策事件（示範資料）",
+    "threatSummary": "Demo：事件尚未連結真實新聞或官方文件。",
+    "pivotSummary": "尚無經驗證的政策轉向資料。",
+    "marketReaction": "Demo：不可視為真實市場紀錄。",
+    "daysToPivot": null,
+    "tacoClassification": "pending",
+    "confidence": "low",
+    "sources": []
+  }
+]

@@ -1,64 +1,68 @@
 {
-  "asOf": "2026-07-26T09:00:00Z",
-  "lastSuccessfulUpdate": "2026-07-26T09:00:00Z",
-  "dataMode": "demo",
+  "asOf": "2026-07-19T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-07-27T05:38:35.747Z",
+  "dataMode": "delayed",
   "index": {
-    "score": 78,
-    "compositeZ": 2.65,
-    "status": "TACO 警戒"
+    "score": 22,
+    "compositeZ": 0.7434824593495886,
+    "status": "還沒開火"
   },
   "indicators": {
     "brent": {
       "label": "Brent Crude",
-      "value": 96.78,
+      "value": 86.99,
       "unit": "USD/barrel",
-      "dailyChangePercent": 3.88,
-      "zScore": 2.8,
-      "pressureZ": 2.8,
+      "dailyChangePercent": 2.3291377485001643,
+      "zScore": -0.38913770542046416,
+      "pressureZ": 0,
       "weight": 0.3,
-      "contribution": 0.84,
-      "source": "Demo data／非真實報價",
-      "asOfDate": "2026-07-26",
-      "dataStatus": "simulated"
+      "contribution": 0,
+      "source": "Federal Reserve Bank of St. Louis (FRED), DCOILBRENTEU",
+      "sourceUrl": "https://fred.stlouisfed.org/series/DCOILBRENTEU",
+      "asOfDate": "2026-07-20",
+      "dataStatus": "delayed"
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "value": 4.72,
+      "value": 4.71,
       "unit": "%",
-      "dailyChangePercent": 1.14,
-      "zScore": 2.2,
-      "pressureZ": 2.2,
+      "dailyChangePercent": 0.856531049250536,
+      "zScore": 2.78603254681569,
+      "pressureZ": 2.78603254681569,
       "weight": 0.25,
-      "contribution": 0.55,
-      "source": "Demo data／非真實報價",
-      "asOfDate": "2026-07-26",
-      "dataStatus": "simulated"
+      "contribution": 0.6965081367039225,
+      "source": "Federal Reserve Bank of St. Louis (FRED), DGS10",
+      "sourceUrl": "https://fred.stlouisfed.org/series/DGS10",
+      "asOfDate": "2026-07-23",
+      "dataStatus": "delayed"
     },
     "hormuz": {
       "label": "Strait of Hormuz Transit Calls",
-      "value": 72,
+      "value": 15,
       "unit": "vessels/day",
-      "dailyChangePercent": -6.49,
-      "zScore": -3,
-      "pressureZ": 3,
+      "dailyChangePercent": -11.76470588235294,
+      "zScore": 0.05514571572219703,
+      "pressureZ": 0,
       "weight": 0.25,
-      "contribution": 0.75,
-      "source": "Demo manual dataset／人工維護",
-      "asOfDate": "2026-07-26",
-      "dataStatus": "manual"
+      "contribution": 0,
+      "source": "UN Global Platform; IMF PortWatch, Daily Chokepoints Data",
+      "sourceUrl": "https://portwatch.imf.org/",
+      "asOfDate": "2026-07-19",
+      "dataStatus": "delayed"
     },
     "sp500": {
       "label": "S&P 500",
-      "value": 6028.41,
+      "value": 7411.98,
       "unit": "points",
-      "dailyChangePercent": -2.12,
-      "zScore": -2.55,
-      "pressureZ": 2.55,
+      "dailyChangePercent": 0.04967401428127076,
+      "zScore": -0.23487161322833028,
+      "pressureZ": 0.23487161322833028,
       "weight": 0.2,
-      "contribution": 0.51,
-      "source": "Demo data／非真實報價",
-      "asOfDate": "2026-07-26",
-      "dataStatus": "simulated"
+      "contribution": 0.04697432264566606,
+      "source": "Federal Reserve Bank of St. Louis (FRED), SP500",
+      "sourceUrl": "https://fred.stlouisfed.org/series/SP500",
+      "asOfDate": "2026-07-24",
+      "dataStatus": "delayed"
     }
   }
 }

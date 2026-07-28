@@ -1,10 +1,10 @@
 {
   "asOf": "2026-07-19T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-07-27T05:38:35.747Z",
+  "lastSuccessfulUpdate": "2026-07-28T03:31:48.068Z",
   "dataMode": "delayed",
   "index": {
-    "score": 22,
-    "compositeZ": 0.7434824593495886,
+    "score": 20,
+    "compositeZ": 0.6500470805152361,
     "status": "還沒開火"
   },
   "indicators": {
@@ -24,16 +24,16 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "value": 4.71,
+      "value": 4.69,
       "unit": "%",
-      "dailyChangePercent": 0.856531049250536,
-      "zScore": 2.78603254681569,
-      "pressureZ": 2.78603254681569,
+      "dailyChangePercent": -0.4246284501061481,
+      "zScore": 2.3736890775684194,
+      "pressureZ": 2.3736890775684194,
       "weight": 0.25,
-      "contribution": 0.6965081367039225,
+      "contribution": 0.5934222693921049,
       "source": "Federal Reserve Bank of St. Louis (FRED), DGS10",
       "sourceUrl": "https://fred.stlouisfed.org/series/DGS10",
-      "asOfDate": "2026-07-23",
+      "asOfDate": "2026-07-24",
       "dataStatus": "delayed"
     },
     "hormuz": {
@@ -52,16 +52,16 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "value": 7411.98,
+      "value": 7413.18,
       "unit": "points",
-      "dailyChangePercent": 0.04967401428127076,
-      "zScore": -0.23487161322833028,
-      "pressureZ": 0.23487161322833028,
+      "dailyChangePercent": 0.016190005909361975,
+      "zScore": -0.28312405561565596,
+      "pressureZ": 0.28312405561565596,
       "weight": 0.2,
-      "contribution": 0.04697432264566606,
+      "contribution": 0.0566248111231312,
       "source": "Federal Reserve Bank of St. Louis (FRED), SP500",
       "sourceUrl": "https://fred.stlouisfed.org/series/SP500",
-      "asOfDate": "2026-07-24",
+      "asOfDate": "2026-07-27",
       "dataStatus": "delayed"
     }
   }

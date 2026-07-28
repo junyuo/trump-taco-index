@@ -3,6 +3,8 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  ReferenceArea,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -11,10 +13,13 @@ import {
 } from 'recharts'
 import {
   getHistoryCoverage,
+  getHistoryLeadingIndicatorKey,
   getHistoryStats,
+  indicatorPresentation,
   isHistoryRangeAvailable,
 } from '../lib/dashboardView'
 import { formatDate } from '../lib/format'
+import { buildHistoryObservationSummary } from '../lib/summary'
 import { getIndexStatus } from '../lib/tacoIndex'
 import type { HistoryItem, TacoEvent } from '../types/data'
 
@@ -34,7 +39,7 @@ interface TooltipPayload {
   payload: HistoryItem
 }
 
-function ChartTooltip({
+export function HistoryChartTooltip({
   active,
   payload,
   events,
@@ -46,6 +51,7 @@ function ChartTooltip({
   if (!active || !payload?.[0]) return null
   const item = payload[0].payload
   const status = getIndexStatus(item.score)
+  const leadingKey = getHistoryLeadingIndicatorKey(item)
   const matchedEvents = events.filter(
     (event) =>
       event.sources.length > 0 &&
@@ -58,6 +64,9 @@ function ChartTooltip({
       <span>指數 {item.score}</span>
       <span>{status.icon} {status.name}</span>
       <span>綜合壓力 {item.compositeZ.toFixed(2)}σ</span>
+      <span>
+        主要壓力：{leadingKey ? indicatorPresentation[leadingKey].shortLabel : '無正向壓力'}
+      </span>
       {matchedEvents.map((event) => (
         <span className="tooltip-event" key={event.id}>事件：{event.title}</span>
       ))}
@@ -79,6 +88,11 @@ export function HistoryChart({ history, events }: Props) {
   const latest = history.at(-1)
   const latestStatus = latest ? getIndexStatus(latest.score) : null
   const stats = getHistoryStats(filteredHistory)
+  const periodLatest = filteredHistory.at(-1)
+  const maximum = stats
+    ? filteredHistory.find((item) => item.date === stats.maximumDate)
+    : undefined
+  const historySummary = buildHistoryObservationSummary(filteredHistory)
 
   return (
     <section className="panel chart-panel" aria-labelledby="history-title">
@@ -144,7 +158,12 @@ export function HistoryChart({ history, events }: Props) {
                 minTickGap={32}
               />
               <YAxis domain={[0, 100]} ticks={[0, 25, 50, 70, 85, 100]} stroke="var(--chart-axis)" fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip content={<ChartTooltip events={events} />} />
+              <ReferenceArea y1={0} y2={25} fill="var(--band-green)" fillOpacity={0.05} />
+              <ReferenceArea y1={25} y2={50} fill="var(--band-yellow)" fillOpacity={0.05} />
+              <ReferenceArea y1={50} y2={70} fill="var(--band-orange)" fillOpacity={0.05} />
+              <ReferenceArea y1={70} y2={85} fill="var(--band-red)" fillOpacity={0.06} />
+              <ReferenceArea y1={85} y2={100} fill="var(--band-deep-red)" fillOpacity={0.07} />
+              <Tooltip content={<HistoryChartTooltip events={events} />} />
               <ReferenceLine y={70} stroke="var(--orange)" strokeDasharray="5 5" label={{ value: '警戒 70', fill: 'var(--orange)', position: 'insideTopRight', fontSize: 12 }} />
               <ReferenceLine y={85} stroke="var(--deep-red)" strokeDasharray="5 5" label={{ value: 'TACO 85', fill: 'var(--critical-text)', position: 'insideTopRight', fontSize: 12 }} />
               <Area
@@ -155,24 +174,49 @@ export function HistoryChart({ history, events }: Props) {
                 fill="url(#scoreGradient)"
                 activeDot={{ r: 5, fill: 'var(--taco)', stroke: 'var(--bg)', strokeWidth: 2 }}
               />
+              {maximum && periodLatest && maximum.date !== periodLatest.date && (
+                <ReferenceDot
+                  x={maximum.date}
+                  y={maximum.score}
+                  r={5}
+                  fill="var(--orange)"
+                  stroke="var(--surface)"
+                  strokeWidth={2}
+                />
+              )}
+              {periodLatest && (
+                <ReferenceDot
+                  x={periodLatest.date}
+                  y={periodLatest.score}
+                  r={5}
+                  fill="var(--taco)"
+                  stroke="var(--surface)"
+                  strokeWidth={2}
+                />
+              )}
               </AreaChart>
             </ResponsiveContainer>
           </div>
           {stats && (
             <dl className="history-stats" aria-label="所選期間歷史統計">
-              <div><dt>期間最高</dt><dd>{stats.maximumScore.toFixed(0)} 分</dd></div>
-              <div><dt>期間平均</dt><dd>{stats.averageScore.toFixed(1)} 分</dd></div>
+              <div>
+                <dt>期間變化</dt>
+                <dd>{stats.periodChange > 0 ? '+' : ''}{stats.periodChange.toFixed(0)} 分</dd>
+              </div>
+              <div>
+                <dt>期間最高</dt>
+                <dd>{stats.maximumScore.toFixed(0)} 分<small>{formatDate(stats.maximumDate)}</small></dd>
+              </div>
               <div><dt>≥ 70 分</dt><dd>{stats.warningDays} 日</dd></div>
               <div><dt>≥ 85 分</dt><dd>{stats.criticalDays} 日</dd></div>
               <div><dt>最新百分位</dt><dd>{stats.latestPercentile}%</dd></div>
             </dl>
           )}
-          {latest && latestStatus && (
-            <p className="chart-text-summary">
-              最新觀測為 {formatDate(latest.date)}，指數 {latest.score} 分，狀態為
-              「{latestStatus.name}」，綜合壓力 {latest.compositeZ.toFixed(2)}σ。
-            </p>
-          )}
+          <div className="history-insight" role="note" aria-label="所選期間文字判讀">
+            <strong>期間判讀</strong>
+            <p>{historySummary}</p>
+            <span>依既定規則與公開歷史欄位產生，並非 AI 推論。</span>
+          </div>
         </>
       )}
       <div className="chart-legend" aria-label="門檻說明">

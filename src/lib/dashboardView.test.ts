@@ -3,6 +3,8 @@ import { getIndexStatus } from './tacoIndex'
 import {
   getDailyPressureImpact,
   getHistoryCoverage,
+  getHistoryContributions,
+  getHistoryLeadingIndicatorKey,
   getHistoryStats,
   getThresholdDistance,
   isHistoryRangeAvailable,
@@ -69,12 +71,41 @@ describe('dashboard view helpers', () => {
     ]
     expect(getHistoryStats(history)).toEqual({
       maximumScore: 85,
+      maximumDate: '2026-01-03',
       averageScore: 53.75,
+      periodChange: 20,
       warningDays: 2,
       criticalDays: 1,
       latestPercentile: 50,
     })
     expect(getHistoryStats([])).toBeNull()
+  })
+
+  it('uses the most recent date when the maximum score is tied', () => {
+    const history = [
+      historyItem('2026-01-01', 70),
+      historyItem('2026-01-02', 20),
+      historyItem('2026-01-03', 70),
+    ]
+    expect(getHistoryStats(history)?.maximumDate).toBe('2026-01-03')
+  })
+
+  it('derives historical contributions with the configured pressure directions', () => {
+    const item = {
+      ...historyItem('2026-01-01'),
+      brentZ: 2,
+      us10yZ: 1,
+      hormuzZ: -2,
+      sp500Z: -1,
+    }
+    expect(getHistoryContributions(item)).toEqual({
+      brent: 0.6,
+      us10y: 0.25,
+      hormuz: 0.5,
+      sp500: 0.2,
+    })
+    expect(getHistoryLeadingIndicatorKey(item)).toBe('brent')
+    expect(getHistoryLeadingIndicatorKey(historyItem('2026-01-01'))).toBeNull()
   })
 
   it('treats 252 trading observations as one year', () => {

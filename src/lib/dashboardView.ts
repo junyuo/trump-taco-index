@@ -1,4 +1,5 @@
-import type { IndicatorKey } from '../config/indexConfig'
+import { indexConfig, indicatorKeys, type IndicatorKey } from '../config/indexConfig'
+import { toPressureZ } from './tacoIndex'
 import type { HistoryItem, LatestData } from '../types/data'
 
 export const indicatorPresentation: Record<
@@ -69,19 +70,55 @@ export function isHistoryRangeAvailable(history: HistoryItem[], days: number): b
 
 export interface HistoryStats {
   maximumScore: number
+  maximumDate: string
   averageScore: number
+  periodChange: number
   warningDays: number
   criticalDays: number
   latestPercentile: number
+}
+
+export function getHistoryContributions(
+  item: HistoryItem,
+): Record<IndicatorKey, number> {
+  const zScores: Record<IndicatorKey, number> = {
+    brent: item.brentZ,
+    us10y: item.us10yZ,
+    hormuz: item.hormuzZ,
+    sp500: item.sp500Z,
+  }
+
+  return Object.fromEntries(
+    indicatorKeys.map((key) => [
+      key,
+      toPressureZ(key, zScores[key]) * indexConfig.weights[key],
+    ]),
+  ) as Record<IndicatorKey, number>
+}
+
+export function getHistoryLeadingIndicatorKey(
+  item: HistoryItem,
+): IndicatorKey | null {
+  const contributions = getHistoryContributions(item)
+  const leader = indicatorKeys.reduce((current, key) =>
+    contributions[key] > contributions[current] ? key : current,
+  )
+
+  return contributions[leader] > 0 ? leader : null
 }
 
 export function getHistoryStats(history: HistoryItem[]): HistoryStats | null {
   if (history.length === 0) return null
   const scores = history.map((item) => item.score)
   const latestScore = scores.at(-1)!
+  const maximum = history.reduce((current, item) =>
+    item.score >= current.score ? item : current,
+  )
   return {
-    maximumScore: Math.max(...scores),
+    maximumScore: maximum.score,
+    maximumDate: maximum.date,
     averageScore: scores.reduce((sum, score) => sum + score, 0) / scores.length,
+    periodChange: latestScore - scores[0],
     warningDays: scores.filter((score) => score >= 70).length,
     criticalDays: scores.filter((score) => score >= 85).length,
     latestPercentile: Math.round(

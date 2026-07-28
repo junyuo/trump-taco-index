@@ -570,12 +570,27 @@ main, footer { width: min(1344px, calc(100% - 56px)); margin-inline: auto; }
 .history-stats div { min-width: 0; text-align: right; }
 .history-stats dt { color: var(--muted); font-size: 12px; }
 .history-stats dd { margin: 3px 0 0; color: var(--text); font: 600 13px/1.3 var(--mono); }
-.chart-text-summary, .history-method-note, .panel-note {
+.history-stats dd small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font: 500 11px/1.35 var(--mono);
+}
+.history-insight {
+  margin: 8px 0 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--taco);
+  border-radius: 0 10px 10px 0;
+  background: var(--surface-2);
+}
+.history-insight strong { color: var(--text-strong); font-size: 13px; }
+.history-insight p { margin: 5px 0 0; color: var(--text-soft); font-size: 14px; line-height: 1.7; }
+.history-insight span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+.history-method-note, .panel-note {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.65;
 }
-.chart-text-summary { margin: 4px 0 14px; }
 .history-method-note { margin: 13px 0 0; }
 .contribution-chart { height: 274px; }
 .panel-note { margin: 12px 0 0; }

@@ -2,9 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { DataStatusBanner } from './DataStatusBanner'
 import { IndicatorCard } from './IndicatorCard'
+import { HistoryChartTooltip } from './HistoryChart'
 import { MarketPulse } from './MarketPulse'
 import { PressureMeter } from './PressureMeter'
-import type { LatestData } from '../types/data'
+import type { HistoryItem, LatestData } from '../types/data'
 
 const indicator: LatestData['indicators']['brent'] = {
   label: 'Brent Crude',
@@ -80,5 +81,23 @@ describe('dashboard UI states', () => {
     )
 
     expect(html).toContain('布蘭特原油、荷姆茲通行量更新延遲')
+  })
+
+  it('shows the historical leading pressure source in the chart tooltip', () => {
+    const historyItem: HistoryItem = {
+      date: '2026-07-22',
+      score: 78,
+      compositeZ: 2.55,
+      brentZ: 2.7,
+      us10yZ: 1,
+      hormuzZ: 0,
+      sp500Z: 0,
+    }
+    const html = renderToStaticMarkup(
+      <HistoryChartTooltip active payload={[{ payload: historyItem }]} events={[]} />,
+    )
+
+    expect(html).toContain('TACO 警戒')
+    expect(html).toContain('主要壓力：布蘭特原油')
   })
 })

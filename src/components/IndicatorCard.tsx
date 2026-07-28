@@ -10,6 +10,7 @@ interface Props {
   indicatorKey: IndicatorKey
   indicator: Indicator
   stale: boolean
+  maxContribution: number
 }
 
 const statusLabels = {
@@ -25,7 +26,7 @@ const impactLabels = {
   neutral: '目前未增加壓力',
 } as const
 
-export function IndicatorCard({ indicatorKey, indicator, stale }: Props) {
+export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution }: Props) {
   const TrendIcon =
     indicator.dailyChangePercent > 0
       ? ArrowUpRight
@@ -38,6 +39,8 @@ export function IndicatorCard({ indicatorKey, indicator, stale }: Props) {
     indicator.contribution === 0
       ? 'neutral'
       : getDailyPressureImpact(indicatorKey, indicator.dailyChangePercent)
+  const contributionPercent =
+    maxContribution > 0 ? Math.min(100, (indicator.contribution / maxContribution) * 100) : 0
 
   const sourceContent = (
     <>
@@ -93,6 +96,12 @@ export function IndicatorCard({ indicatorKey, indicator, stale }: Props) {
           <dd>{indicator.contribution.toFixed(2)}σ</dd>
         </div>
       </dl>
+      <div
+        className="contribution-meter"
+        aria-label={`相對壓力貢獻 ${Math.round(contributionPercent)}%`}
+      >
+        <span style={{ width: `${contributionPercent}%` }} />
+      </div>
       <div className="indicator-source indicator-source-desktop">
         <StatusIcon aria-hidden="true" size={15} />
         <span>{sourceContent}</span>

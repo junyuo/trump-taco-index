@@ -30,7 +30,7 @@ describe('theme preferences', () => {
 
     expect(getAppliedTheme(root)).toBe('dark')
     expect(root.style.colorScheme).toBe('dark')
-    expect(meta.content).toBe('#080b0e')
+    expect(meta.content).toBe('#09111e')
   })
 
   it('stores the selection and tolerates blocked writes', () => {

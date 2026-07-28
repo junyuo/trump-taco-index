@@ -1,8 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { DataStatusBanner } from './DataStatusBanner'
-import { Gauge } from './Gauge'
 import { IndicatorCard } from './IndicatorCard'
+import { MarketPulse } from './MarketPulse'
+import { PressureMeter } from './PressureMeter'
 import type { LatestData } from '../types/data'
 
 const indicator: LatestData['indicators']['brent'] = {
@@ -36,27 +37,41 @@ const latest: LatestData = {
 describe('dashboard UI states', () => {
   it('labels the common data basis separately from the successful fetch time', () => {
     const html = renderToStaticMarkup(
-      <Gauge
-        score={22}
-        compositeZ={0.74}
-        asOf={latest.asOf}
-        lastSuccessfulUpdate={latest.lastSuccessfulUpdate}
-      />,
+      <MarketPulse latest={latest} summary="目前市場壓力仍有限。" />,
     )
 
     expect(html).toContain('共同資料基準')
     expect(html).toContain('最近成功抓取')
     expect(html).toContain('status-green')
+    expect(html).toContain('距 70 分警戒 48 分')
+    expect(html).toContain('布蘭特原油')
+  })
+
+  it('renders all five pressure bands and the current score marker', () => {
+    const html = renderToStaticMarkup(<PressureMeter score={72} />)
+
+    expect(html).toContain('band-green')
+    expect(html).toContain('band-yellow')
+    expect(html).toContain('band-orange')
+    expect(html).toContain('band-red active')
+    expect(html).toContain('band-deep-red')
+    expect(html).toContain('left:72%')
   })
 
   it('shows stale status on an individual indicator card', () => {
     const html = renderToStaticMarkup(
-      <IndicatorCard indicatorKey="brent" indicator={indicator} stale />,
+      <IndicatorCard
+        indicatorKey="brent"
+        indicator={indicator}
+        stale
+        maxContribution={0.5}
+      />,
     )
 
     expect(html).toContain('更新延遲')
     expect(html).toContain('布蘭特原油')
     expect(html).toContain('目前未增加壓力')
+    expect(html).toContain('相對壓力貢獻 0%')
   })
 
   it('lists stale sources in the data health banner', () => {

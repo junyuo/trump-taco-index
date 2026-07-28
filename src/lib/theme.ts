@@ -3,8 +3,8 @@ export type Theme = 'light' | 'dark'
 export const THEME_STORAGE_KEY = 'taco-theme'
 
 export const themeColors: Record<Theme, string> = {
-  light: '#f6f1e7',
-  dark: '#080b0e',
+  light: '#f4f6f9',
+  dark: '#09111e',
 }
 
 export function isTheme(value: unknown): value is Theme {

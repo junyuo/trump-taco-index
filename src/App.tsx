@@ -1,24 +1,18 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Activity, ArrowDown, Gauge as GaugeIcon, Info, Menu, RefreshCw } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Info, Menu, RefreshCw } from 'lucide-react'
 import { ContributionChart } from './components/ContributionChart'
 import { DataStatusBanner } from './components/DataStatusBanner'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EventTimeline } from './components/EventTimeline'
-import { Gauge } from './components/Gauge'
 import { HistoryChart } from './components/HistoryChart'
 import { IndicatorCard } from './components/IndicatorCard'
+import { MarketPulse } from './components/MarketPulse'
 import { Methodology } from './components/Methodology'
 import { ThemeToggle } from './components/ThemeToggle'
 import { loadDashboardData, type DashboardData } from './lib/data'
 import { buildObservationSummary } from './lib/summary'
 import { indicatorKeys } from './config/indexConfig'
 import { isIndicatorStale } from './lib/tacoIndex'
-import {
-  getLeadingIndicatorKeys,
-  getThresholdDistance,
-  indicatorPresentation,
-} from './lib/dashboardView'
-import { formatDateTime } from './lib/format'
 
 const modeLabels = {
   live: 'LIVE DATA',
@@ -41,15 +35,18 @@ function LoadingDashboard() {
 }
 
 function Dashboard({ data }: { data: DashboardData }) {
+  const mobileNavRef = useRef<HTMLDetailsElement>(null)
   const staleIndicators = indicatorKeys.filter((key) =>
     isIndicatorStale(key, data.latest.indicators[key].asOfDate),
   )
   const summary = buildObservationSummary(data.latest)
-  const leadingKeys = getLeadingIndicatorKeys(data.latest.indicators)
-  const leadingLabels = leadingKeys
-    .map((key) => indicatorPresentation[key].shortLabel)
-    .join('、')
-  const warningDistance = getThresholdDistance(data.latest.index.score, 70)
+  const maxContribution = Math.max(
+    ...indicatorKeys.map((key) => data.latest.indicators[key].contribution),
+    0,
+  )
+  const closeMobileNav = () => {
+    if (mobileNavRef.current) mobileNavRef.current.open = false
+  }
 
   return (
     <>
@@ -57,24 +54,26 @@ function Dashboard({ data }: { data: DashboardData }) {
         <a className="brand" href="#top" aria-label="回到首頁">
           <span className="taco-mark" aria-hidden="true"><i /></span>
           <span>
-            <strong>TRUMP TACO INDEX</strong>
-            <small>MARKET PRESSURE MONITOR</small>
+            <strong>TACO Index</strong>
+            <small>市場壓力觀察</small>
           </span>
         </a>
         <nav aria-label="主要導覽">
-          <a href="#dashboard">市場儀表板</a>
+          <a href="#dashboard">市場脈搏</a>
+          <a href="#indicators">壓力訊號</a>
           <a href="#timeline">事件紀錄</a>
           <a href="#methodology">方法論</a>
         </nav>
         <div className="header-actions">
           <ThemeToggle />
           <span className="header-mode"><i aria-hidden="true" /> {modeLabels[data.latest.dataMode]}</span>
-          <details className="mobile-nav">
+          <details className="mobile-nav" ref={mobileNavRef}>
             <summary aria-label="開啟主要導覽"><Menu aria-hidden="true" size={20} /></summary>
             <nav aria-label="行動版主要導覽">
-              <a href="#dashboard">市場儀表板</a>
-              <a href="#timeline">事件研究區</a>
-              <a href="#methodology">方法論</a>
+              <a href="#dashboard" onClick={closeMobileNav}>市場脈搏</a>
+              <a href="#indicators" onClick={closeMobileNav}>壓力訊號</a>
+              <a href="#timeline" onClick={closeMobileNav}>事件研究區</a>
+              <a href="#methodology" onClick={closeMobileNav}>方法論</a>
             </nav>
           </details>
         </div>
@@ -83,63 +82,21 @@ function Dashboard({ data }: { data: DashboardData }) {
       <main id="top">
         <DataStatusBanner data={data.latest} staleIndicators={staleIndicators} />
 
-        <section className="hero" id="dashboard">
-          <div className="hero-copy">
-            <span className="eyebrow"><Activity aria-hidden="true" size={15} /> MARKET STRESS, EXPLAINED</span>
-            <h1>
-              <span>Trump TACO Index</span>
-              川普政策退縮壓力指數
-            </h1>
-            <p className="hero-lead">市場還能承受多久？用四個市場變數觀察下一個 TACO 時刻。</p>
-            <p className="hero-line">市場先被嚇一跳，政策再往後退一步。</p>
-            <dl className="hero-facts" aria-label="市場壓力快速摘要">
-              <div>
-                <dt>主要壓力</dt>
-                <dd>{leadingLabels}</dd>
-              </div>
-              <div>
-                <dt>距 70 分警戒</dt>
-                <dd>{warningDistance === 0 ? '已進入警戒區' : `${warningDistance} 分`}</dd>
-              </div>
-              <div>
-                <dt>共同資料基準</dt>
-                <dd>{formatDateTime(data.latest.asOf)}</dd>
-              </div>
-            </dl>
-            <a className="scroll-link" href="#indicators">
-              查看壓力來源 <ArrowDown aria-hidden="true" size={16} />
-            </a>
-          </div>
-          <Gauge
-            score={data.latest.index.score}
-            compositeZ={data.latest.index.compositeZ}
-            asOf={data.latest.asOf}
-            lastSuccessfulUpdate={data.latest.lastSuccessfulUpdate}
-          />
-        </section>
+        <MarketPulse latest={data.latest} summary={summary} />
 
-        <aside className="model-notice" aria-label="模型與投資免責聲明">
+        <aside className="transparency-strip" aria-label="模型與投資免責聲明">
           <Info aria-hidden="true" size={20} />
           <p>
-            <strong>這不是占卜，是把市場的胃痛量化。</strong>
-            本站指數為市場觀察模型，不是 Signum Global Advisors 官方指數，也不是投資建議。由於原始模型的完整公式與權重並未公開，本站採用可解釋的代理模型重建市場壓力指標。
+            <strong>透明代理模型</strong>
+            本站不是 Signum Global Advisors 官方指數，也不是投資建議；完整公式未公開，因此採用可解釋的 Z-score 與代理權重衡量市場壓力。
+            <a href="#methodology">查看方法與限制</a>
           </p>
         </aside>
-
-        <section className="observation-panel" aria-labelledby="observation-title">
-          <div className="observation-icon" aria-hidden="true"><GaugeIcon /></div>
-          <div>
-            <span className="eyebrow">RULE-BASED BRIEF</span>
-            <h2 id="observation-title">今日觀察摘要</h2>
-            <p>{summary}</p>
-          </div>
-          <span className="rules-badge">規則式產生</span>
-        </section>
 
         <section className="indicator-section" id="indicators" aria-labelledby="indicators-title">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">LIVE PRESSURE INPUTS</span>
+              <span className="section-kicker">MARKET INPUTS</span>
               <h2 id="indicators-title">四項市場壓力訊號</h2>
             </div>
             <p>指數越高，代表市場壓力越接近歷史上的政策轉向區域。</p>
@@ -150,6 +107,7 @@ function Dashboard({ data }: { data: DashboardData }) {
                 indicatorKey={key}
                 indicator={data.latest.indicators[key]}
                 stale={staleIndicators.includes(key)}
+                maxContribution={maxContribution}
                 key={key}
               />
             ))}
@@ -165,16 +123,18 @@ function Dashboard({ data }: { data: DashboardData }) {
           </ErrorBoundary>
         </section>
 
-        <div id="timeline">
-          <EventTimeline events={data.events} />
+        <div className="research-stack">
+          <div id="timeline">
+            <EventTimeline events={data.events} />
+          </div>
+          <Methodology />
         </div>
-        <Methodology />
       </main>
 
       <footer>
         <div className="brand footer-brand">
           <span className="taco-mark" aria-hidden="true"><i /></span>
-          <span><strong>TRUMP TACO INDEX</strong><small>AN OPEN MARKET OBSERVATION PROJECT</small></span>
+          <span><strong>TACO Index</strong><small>開放市場觀察專案</small></span>
         </div>
         <p>僅供教育與研究用途，不構成投資建議。資料時間與狀態請以各卡片標示為準。</p>
         <p>© 2026 Trump TACO Index</p>

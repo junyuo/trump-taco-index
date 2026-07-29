@@ -47,6 +47,39 @@ export const historyItemSchema = z.object({
 
 export const historyDataSchema = z.array(historyItemSchema)
 
+export const eventSourceTypeSchema = z.enum([
+  'primary-policy',
+  'market-data',
+  'reporting',
+])
+
+export const eventCriteriaSchema = z.object({
+  threatConfirmed: z.boolean(),
+  pivotConfirmed: z.boolean(),
+  marketStressObserved: z.boolean(),
+  timingAligned: z.boolean(),
+  contemporaneousLink: z.boolean(),
+})
+
+export const eventMarketEvidenceSchema = z.object({
+  baselineDate: z.string().date(),
+  peakDate: z.string().date(),
+  baselineScore: z.number().min(0).max(100),
+  peakScore: z.number().min(0).max(100),
+  scoreChange: z.number().finite(),
+  leadingIndicators: z.array(z.enum(['brent', 'us10y', 'hormuz', 'sp500'])),
+})
+
+export const eventSourceSchema = z.object({
+  type: eventSourceTypeSchema.optional(),
+  title: z.string().min(1),
+  publisher: z.string().min(1),
+  date: z.string().date(),
+  url: z.string().url().refine((url) => url.startsWith('https://'), {
+    message: '事件來源必須使用 HTTPS',
+  }),
+})
+
 export const eventSchema = z.object({
   id: z.string().min(1),
   threatDate: z.string().date(),
@@ -59,18 +92,24 @@ export const eventSchema = z.object({
   daysToPivot: z.number().int().nonnegative().nullable(),
   tacoClassification: z.enum(['likely', 'possible', 'unlikely', 'pending']),
   confidence: z.enum(['high', 'medium', 'low']),
-  sources: z.array(
-    z.object({
-      title: z.string().min(1),
-      publisher: z.string().min(1),
-      date: z.string().date(),
-      url: z.string().url(),
-    }),
-  ),
+  lastReviewedAt: z.string().date().optional(),
+  marketEvidence: eventMarketEvidenceSchema.optional(),
+  criteria: eventCriteriaSchema.optional(),
+  sources: z.array(eventSourceSchema),
+})
+
+export const eventCandidateSchema = eventSchema.extend({
+  reviewStatus: z.enum(['draft', 'in-review', 'approved']),
+  lastReviewedAt: z.string().date(),
+  marketEvidence: eventMarketEvidenceSchema.nullable(),
+  criteria: eventCriteriaSchema,
+  sources: z.array(eventSourceSchema.extend({ type: eventSourceTypeSchema })),
 })
 
 export const eventsDataSchema = z.array(eventSchema)
+export const eventCandidatesDataSchema = z.array(eventCandidateSchema)
 
 export type LatestData = z.infer<typeof latestDataSchema>
 export type HistoryItem = z.infer<typeof historyItemSchema>
 export type TacoEvent = z.infer<typeof eventSchema>
+export type TacoEventCandidate = z.infer<typeof eventCandidateSchema>

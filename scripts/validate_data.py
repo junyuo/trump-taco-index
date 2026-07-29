@@ -168,20 +168,98 @@ def validate_history(payload: object, *, require_backfill: bool = False) -> None
             finite_number(item.get(field), f"history[{position}].{field}")
 
 
-def validate_events(payload: object) -> None:
+def validate_events(payload: object, require_verified: bool = False) -> None:
     require(isinstance(payload, list), "events.json must contain an array")
     seen_ids: set[str] = set()
+    previous_threat_date = "9999-12-31"
     for position, item in enumerate(payload):
         require(isinstance(item, dict), f"events[{position}] must be an object")
         event_id = item.get("id")
         require(isinstance(event_id, str) and event_id, "event id is required")
         require(event_id not in seen_ids, f"duplicate event id: {event_id}")
         seen_ids.add(event_id)
-        validate_iso_date(item.get("threatDate"), f"events[{position}].threatDate")
+        threat_date = item.get("threatDate")
+        validate_iso_date(threat_date, f"events[{position}].threatDate")
+        if require_verified:
+            require(
+                threat_date <= previous_threat_date,
+                "verified events must be sorted by threatDate descending",
+            )
+        previous_threat_date = threat_date
         pivot_date = item.get("pivotDate")
         if pivot_date is not None:
             validate_iso_date(pivot_date, f"events[{position}].pivotDate")
-        require(isinstance(item.get("sources"), list), "event sources must be an array")
+            require(pivot_date >= threat_date, "event pivotDate must not precede threatDate")
+            expected_days = (
+                datetime.fromisoformat(pivot_date) - datetime.fromisoformat(threat_date)
+            ).days
+            require(
+                item.get("daysToPivot") == expected_days,
+                "event daysToPivot must match threatDate and pivotDate",
+            )
+        else:
+            require(item.get("daysToPivot") is None, "pending event daysToPivot must be null")
+
+        sources = item.get("sources")
+        require(isinstance(sources, list), "event sources must be an array")
+        for source_position, source in enumerate(sources):
+            require(isinstance(source, dict), "event source must be an object")
+            source_url = source.get("url")
+            require(
+                isinstance(source_url, str) and source_url.startswith("https://"),
+                f"events[{position}].sources[{source_position}].url must use HTTPS",
+            )
+            validate_iso_date(
+                source.get("date"),
+                f"events[{position}].sources[{source_position}].date",
+            )
+
+        evidence = item.get("marketEvidence")
+        criteria = item.get("criteria")
+        if evidence is not None:
+            require(isinstance(evidence, dict), "event marketEvidence must be an object")
+            baseline_score = finite_number(
+                evidence.get("baselineScore"),
+                f"events[{position}].marketEvidence.baselineScore",
+            )
+            peak_score = finite_number(
+                evidence.get("peakScore"),
+                f"events[{position}].marketEvidence.peakScore",
+            )
+            score_change = finite_number(
+                evidence.get("scoreChange"),
+                f"events[{position}].marketEvidence.scoreChange",
+            )
+            require(0 <= baseline_score <= 100, "event baselineScore must be 0..100")
+            require(0 <= peak_score <= 100, "event peakScore must be 0..100")
+            require(
+                abs(score_change - (peak_score - baseline_score)) < 1e-9,
+                "event scoreChange must equal peakScore minus baselineScore",
+            )
+        if criteria is not None:
+            require(isinstance(criteria, dict), "event criteria must be an object")
+            for key in (
+                "threatConfirmed",
+                "pivotConfirmed",
+                "marketStressObserved",
+                "timingAligned",
+                "contemporaneousLink",
+            ):
+                require(isinstance(criteria.get(key), bool), f"event criteria.{key} must be boolean")
+
+        if require_verified:
+            serialized = json.dumps(item, ensure_ascii=False).lower()
+            for marker in ("demo", "simulated", "placeholder"):
+                require(marker not in serialized, f"verified events must not contain {marker}")
+            require(len(sources) > 0, "verified event sources must not be empty")
+            source_types = {source.get("type") for source in sources}
+            require(
+                {"primary-policy", "market-data", "reporting"} <= source_types,
+                "verified event requires policy, market, and reporting sources",
+            )
+            require(evidence is not None, "verified event requires marketEvidence")
+            require(criteria is not None, "verified event requires criteria")
+            require(item.get("confidence") in ("high", "medium"), "verified event confidence is too low")
 
 
 def parse_args() -> argparse.Namespace:
@@ -190,6 +268,11 @@ def parse_args() -> argparse.Namespace:
         "--require-live",
         action="store_true",
         help="Require delayed, traceable, fresh live market data.",
+    )
+    parser.add_argument(
+        "--require-verified-events",
+        action="store_true",
+        help="Require sourced, non-demo, auditable public event research.",
     )
     parser.add_argument(
         "--require-backfill",
@@ -213,12 +296,16 @@ def main() -> None:
         else load_json("history.json")
     )
     validate_history(history, require_backfill=args.require_backfill)
-    validate_events(load_json("events.json"))
+    validate_events(
+        load_json("events.json"),
+        require_verified=args.require_verified_events,
+    )
     modes = [
         label
         for enabled, label in (
             (args.require_live, "live readiness"),
             (args.require_backfill, "252-point backfill"),
+            (args.require_verified_events, "verified events"),
         )
         if enabled
     ]

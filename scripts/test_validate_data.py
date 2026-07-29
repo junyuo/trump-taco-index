@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from smoke_deployment import run_smoke
-from validate_data import load_json, validate_history, validate_latest
+from validate_data import load_json, validate_events, validate_history, validate_latest
 
 
 NOW = datetime(2026, 7, 27, 12, tzinfo=timezone.utc)
@@ -152,6 +152,41 @@ class LiveValidationTests(unittest.TestCase):
             validate_history([point], require_backfill=True)
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             validate_history([point, copy.deepcopy(point)])
+
+    def test_verified_event_requires_auditable_sources(self) -> None:
+        event = {
+            "id": "verified-event",
+            "threatDate": "2025-04-02",
+            "pivotDate": "2025-04-09",
+            "daysToPivot": 7,
+            "confidence": "medium",
+            "marketEvidence": {
+                "baselineScore": 20,
+                "peakScore": 35,
+                "scoreChange": 15,
+            },
+            "criteria": {
+                "threatConfirmed": True,
+                "pivotConfirmed": True,
+                "marketStressObserved": True,
+                "timingAligned": True,
+                "contemporaneousLink": True,
+            },
+            "sources": [
+                {
+                    "type": source_type,
+                    "date": "2025-04-09",
+                    "url": f"https://example.com/{source_type}",
+                }
+                for source_type in ("primary-policy", "market-data", "reporting")
+            ],
+        }
+        validate_events([event], require_verified=True)
+
+        missing_market = copy.deepcopy(event)
+        missing_market["sources"] = missing_market["sources"][:1]
+        with self.assertRaisesRegex(ValueError, "policy, market, and reporting"):
+            validate_events([missing_market], require_verified=True)
 
 
 if __name__ == "__main__":

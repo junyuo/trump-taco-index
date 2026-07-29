@@ -5,6 +5,7 @@ import { IndicatorCard } from './IndicatorCard'
 import { HistoryChartTooltip } from './HistoryChart'
 import { MarketPulse } from './MarketPulse'
 import { PressureMeter } from './PressureMeter'
+import { EventTimeline } from './EventTimeline'
 import type { HistoryItem, LatestData } from '../types/data'
 
 const indicator: LatestData['indicators']['brent'] = {
@@ -99,5 +100,57 @@ describe('dashboard UI states', () => {
 
     expect(html).toContain('TACO 警戒')
     expect(html).toContain('主要壓力：布蘭特原油')
+  })
+
+  it('renders auditable event evidence without claiming causation', () => {
+    const html = renderToStaticMarkup(
+      <EventTimeline
+        events={[
+          {
+            id: 'verified-event',
+            threatDate: '2025-04-02',
+            pivotDate: '2025-04-09',
+            category: 'tariff',
+            title: '已查證事件',
+            threatSummary: '政策內容',
+            pivotSummary: '調整內容',
+            marketReaction: '市場變化',
+            daysToPivot: 7,
+            tacoClassification: 'likely',
+            confidence: 'medium',
+            lastReviewedAt: '2026-07-29',
+            marketEvidence: {
+              baselineDate: '2025-04-01',
+              peakDate: '2025-04-08',
+              baselineScore: 30,
+              peakScore: 45,
+              scoreChange: 15,
+              leadingIndicators: ['sp500'],
+            },
+            criteria: {
+              threatConfirmed: true,
+              pivotConfirmed: true,
+              marketStressObserved: true,
+              timingAligned: true,
+              contemporaneousLink: true,
+            },
+            sources: [
+              {
+                type: 'primary-policy',
+                title: '官方文件',
+                publisher: '官方',
+                date: '2025-04-02',
+                url: 'https://example.com/policy',
+              },
+            ],
+          },
+        ]}
+      />,
+    )
+
+    expect(html).toContain('時間關聯')
+    expect(html).toContain('期間最高')
+    expect(html).toContain('標普 500')
+    expect(html).toContain('官方政策文件')
   })
 })

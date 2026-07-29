@@ -1,0 +1,80 @@
+[
+  {
+    "id": "tariff-reciprocal-pause-2025-04",
+    "reviewStatus": "draft",
+    "threatDate": "2025-04-02",
+    "pivotDate": "2025-04-09",
+    "category": "tariff",
+    "title": "對等關稅較高國別稅率暫停事件",
+    "threatSummary": "美國宣布 10% 基準關稅及針對部分貿易夥伴的較高國別稅率。",
+    "pivotSummary": "美國暫停多數貿易夥伴的較高國別稅率 90 日，期間維持 10% 基準稅率；中國不在此暫停範圍內。",
+    "marketReaction": "市場證據仍待使用同一批歷史來源資料計算與人工抽查。",
+    "daysToPivot": 7,
+    "tacoClassification": "pending",
+    "confidence": "low",
+    "lastReviewedAt": "2026-07-29",
+    "marketEvidence": null,
+    "criteria": {
+      "threatConfirmed": true,
+      "pivotConfirmed": true,
+      "marketStressObserved": false,
+      "timingAligned": true,
+      "contemporaneousLink": false
+    },
+    "sources": [
+      {
+        "type": "primary-policy",
+        "title": "Regulating Imports with a Reciprocal Tariff",
+        "publisher": "The White House",
+        "date": "2025-04-02",
+        "url": "https://www.whitehouse.gov/presidential-actions/2025/04/regulating-imports-with-a-reciprocal-tariff-to-rectify-trade-practices-that-contribute-to-large-and-persistent-annual-united-states-goods-trade-deficits/"
+      },
+      {
+        "type": "primary-policy",
+        "title": "Modifying Reciprocal Tariff Rates",
+        "publisher": "The White House",
+        "date": "2025-04-09",
+        "url": "https://www.whitehouse.gov/presidential-actions/2025/04/modifying-reciprocal-tariff-rates-to-reflect-trading-partner-retaliation-and-alignment/"
+      }
+    ]
+  },
+  {
+    "id": "tariff-china-partial-rollback-2025-05",
+    "reviewStatus": "draft",
+    "threatDate": "2025-04-09",
+    "pivotDate": "2025-05-12",
+    "category": "trade",
+    "title": "美中關稅部分回撤與暫停事件",
+    "threatSummary": "美國在對等關稅措施後進一步提高對中國商品的額外關稅。",
+    "pivotSummary": "美中宣布降低部分額外稅率並暫停部分措施 90 日。",
+    "marketReaction": "市場證據仍待使用同一批歷史來源資料計算與人工抽查。",
+    "daysToPivot": 33,
+    "tacoClassification": "pending",
+    "confidence": "low",
+    "lastReviewedAt": "2026-07-29",
+    "marketEvidence": null,
+    "criteria": {
+      "threatConfirmed": true,
+      "pivotConfirmed": true,
+      "marketStressObserved": false,
+      "timingAligned": true,
+      "contemporaneousLink": false
+    },
+    "sources": [
+      {
+        "type": "primary-policy",
+        "title": "Modifying Reciprocal Tariff Rates",
+        "publisher": "The White House",
+        "date": "2025-04-09",
+        "url": "https://www.whitehouse.gov/presidential-actions/2025/04/modifying-reciprocal-tariff-rates-to-reflect-trading-partner-retaliation-and-alignment/"
+      },
+      {
+        "type": "primary-policy",
+        "title": "U.S.-China Trade Fact Sheet",
+        "publisher": "The White House",
+        "date": "2025-05-12",
+        "url": "https://www.whitehouse.gov/fact-sheets/2025/05/fact-sheet-president-donald-j-trump-secures-a-historic-trade-win-for-the-united-states/"
+      }
+    ]
+  }
+]

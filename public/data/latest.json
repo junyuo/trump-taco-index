@@ -1,11 +1,11 @@
 {
   "asOf": "2026-07-23T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-07-31T03:47:30.776Z",
+  "lastSuccessfulUpdate": "2026-07-31T19:49:52.668Z",
   "dataMode": "delayed",
   "index": {
-    "score": 26,
-    "compositeZ": 0.8702988341758316,
-    "status": "玉米餅開始加熱"
+    "score": 18,
+    "compositeZ": 0.6063210193771909,
+    "status": "還沒開火"
   },
   "indicators": {
     "brent": {
@@ -52,16 +52,16 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "value": 7316.15,
+      "value": 7437.63,
       "unit": "points",
-      "dailyChangePercent": -1.5161305086434127,
-      "zScore": -1.4863081991718297,
-      "pressureZ": 1.4863081991718297,
+      "dailyChangePercent": 1.6604361583619867,
+      "zScore": -0.16641912517862575,
+      "pressureZ": 0.16641912517862575,
       "weight": 0.2,
-      "contribution": 0.29726163983436593,
+      "contribution": 0.033283825035725155,
       "source": "Federal Reserve Bank of St. Louis (FRED), SP500",
       "sourceUrl": "https://fred.stlouisfed.org/series/SP500",
-      "asOfDate": "2026-07-29",
+      "asOfDate": "2026-07-30",
       "dataStatus": "delayed"
     }
   }

@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "data:update": "tsx scripts/fetch-market-data.ts",
     "data:backfill": "tsx scripts/backfill-history.ts",
+    "data:check-stability": "tsx scripts/check-schedule-stability.ts",
     "data:validate": "python3 scripts/validate_data.py",
     "data:test": "python3 -m unittest scripts/test_validate_data.py",
     "events:validate": "tsx scripts/validate-events.ts",

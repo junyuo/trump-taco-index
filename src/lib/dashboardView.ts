@@ -45,6 +45,25 @@ export interface HistoryCoverage {
   coverageDays: number
 }
 
+export const MIN_HISTORY_CHART_POINTS = 5
+export const MIN_HISTORY_PERCENTILE_POINTS = 20
+export const FULL_HISTORY_POINTS = 252
+
+export type HistorySampleState =
+  | 'empty'
+  | 'building'
+  | 'preliminary'
+  | 'established'
+  | 'full'
+
+export function getHistorySampleState(pointCount: number): HistorySampleState {
+  if (pointCount === 0) return 'empty'
+  if (pointCount < MIN_HISTORY_CHART_POINTS) return 'building'
+  if (pointCount < MIN_HISTORY_PERCENTILE_POINTS) return 'preliminary'
+  if (pointCount < FULL_HISTORY_POINTS) return 'established'
+  return 'full'
+}
+
 export function getHistoryCoverage(history: HistoryItem[]): HistoryCoverage {
   if (history.length === 0) {
     return { startDate: null, endDate: null, pointCount: 0, coverageDays: 0 }
@@ -64,8 +83,11 @@ export function getHistoryCoverage(history: HistoryItem[]): HistoryCoverage {
 
 export function isHistoryRangeAvailable(history: HistoryItem[], days: number): boolean {
   const coverage = getHistoryCoverage(history)
-  if (days === 366 && coverage.pointCount >= 252) return true
-  return coverage.pointCount >= 2 && coverage.coverageDays >= Math.max(1, days - 7)
+  if (days === 366 && coverage.pointCount >= FULL_HISTORY_POINTS) return true
+  return (
+    coverage.pointCount >= MIN_HISTORY_CHART_POINTS &&
+    coverage.coverageDays >= Math.max(1, days - 7)
+  )
 }
 
 export interface HistoryStats {
@@ -75,7 +97,7 @@ export interface HistoryStats {
   periodChange: number
   warningDays: number
   criticalDays: number
-  latestPercentile: number
+  latestPercentile: number | null
 }
 
 export function getHistoryContributions(
@@ -121,8 +143,11 @@ export function getHistoryStats(history: HistoryItem[]): HistoryStats | null {
     periodChange: latestScore - scores[0],
     warningDays: scores.filter((score) => score >= 70).length,
     criticalDays: scores.filter((score) => score >= 85).length,
-    latestPercentile: Math.round(
-      (scores.filter((score) => score <= latestScore).length / scores.length) * 100,
-    ),
+    latestPercentile:
+      scores.length >= MIN_HISTORY_PERCENTILE_POINTS
+        ? Math.round(
+            (scores.filter((score) => score <= latestScore).length / scores.length) * 100,
+          )
+        : null,
   }
 }

@@ -5,6 +5,7 @@ import {
   getHistoryCoverage,
   getHistoryContributions,
   getHistoryLeadingIndicatorKey,
+  getHistorySampleState,
   getHistoryStats,
   getThresholdDistance,
   isHistoryRangeAvailable,
@@ -51,11 +52,17 @@ describe('dashboard view helpers', () => {
     expect(getHistoryCoverage([]).pointCount).toBe(0)
     expect(isHistoryRangeAvailable([historyItem('2026-07-19')], 31)).toBe(false)
 
-    const history = [historyItem('2026-06-01'), historyItem('2026-07-01')]
+    const history = [
+      historyItem('2026-06-01'),
+      historyItem('2026-06-08'),
+      historyItem('2026-06-15'),
+      historyItem('2026-06-22'),
+      historyItem('2026-07-01'),
+    ]
     expect(getHistoryCoverage(history)).toEqual({
       startDate: '2026-06-01',
       endDate: '2026-07-01',
-      pointCount: 2,
+      pointCount: 5,
       coverageDays: 30,
     })
     expect(isHistoryRangeAvailable(history, 31)).toBe(true)
@@ -76,9 +83,29 @@ describe('dashboard view helpers', () => {
       periodChange: 20,
       warningDays: 2,
       criticalDays: 1,
-      latestPercentile: 50,
+      latestPercentile: null,
     })
     expect(getHistoryStats([])).toBeNull()
+  })
+
+  it('classifies honest history sample states at every display threshold', () => {
+    expect([0, 1, 3, 5, 19, 20, 252].map(getHistorySampleState)).toEqual([
+      'empty',
+      'building',
+      'building',
+      'preliminary',
+      'preliminary',
+      'established',
+      'full',
+    ])
+  })
+
+  it('only calculates a percentile from at least 20 observations', () => {
+    const history = Array.from({ length: 20 }, (_, index) =>
+      historyItem(`2026-01-${String(index + 1).padStart(2, '0')}`, index + 1),
+    )
+    expect(getHistoryStats(history)?.latestPercentile).toBe(100)
+    expect(getHistoryStats(history.slice(0, 19))?.latestPercentile).toBeNull()
   })
 
   it('uses the most recent date when the maximum score is tied', () => {

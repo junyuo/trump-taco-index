@@ -14,6 +14,7 @@ import {
 import {
   getHistoryCoverage,
   getHistoryLeadingIndicatorKey,
+  getHistorySampleState,
   getHistoryStats,
   indicatorPresentation,
   isHistoryRangeAvailable,
@@ -88,6 +89,7 @@ export function HistoryChart({ history, events }: Props) {
   const latest = history.at(-1)
   const latestStatus = latest ? getIndexStatus(latest.score) : null
   const stats = getHistoryStats(filteredHistory)
+  const sampleState = getHistorySampleState(filteredHistory.length)
   const periodLatest = filteredHistory.at(-1)
   const maximum = stats
     ? filteredHistory.find((item) => item.date === stats.maximumDate)
@@ -106,6 +108,9 @@ export function HistoryChart({ history, events }: Props) {
             ? `${formatDate(coverage.startDate)}－${formatDate(coverage.endDate)}｜${coverage.pointCount} 筆`
             : '尚無資料'}
         </span>
+        {sampleState === 'preliminary' && (
+          <span className="history-sample-warning">樣本不足</span>
+        )}
         <div className="range-tabs" role="group" aria-label="歷史圖表時間範圍">
           {rangeOptions.map((option) => {
             const available = isHistoryRangeAvailable(history, option.days)
@@ -127,14 +132,14 @@ export function HistoryChart({ history, events }: Props) {
       </div>
       {history.length === 0 ? (
         <div className="empty-state">尚無歷史資料可供繪圖。</div>
-      ) : history.length < 2 && latest && latestStatus ? (
+      ) : history.length < 5 && latest && latestStatus ? (
         <div className="history-building" role="status">
           <span>真實歷史累積中</span>
           <strong>{latest.score}</strong>
           <p>{latestStatus.icon} {latestStatus.name}｜{formatDate(latest.date)}｜綜合壓力 {latest.compositeZ.toFixed(2)}σ</p>
-          <small>目前僅有首次真實觀測；累積至少兩筆後開始繪製趨勢線。</small>
+          <small>目前有 {history.length} 筆真實觀測；累積至少 5 筆後才顯示初步趨勢，20 筆後才計算歷史百分位。</small>
         </div>
-      ) : filteredHistory.length < 2 ? (
+      ) : filteredHistory.length < 5 ? (
         <div className="empty-state">此範圍內尚無足夠資料可供繪圖。</div>
       ) : (
         <>
@@ -198,7 +203,10 @@ export function HistoryChart({ history, events }: Props) {
             </ResponsiveContainer>
           </div>
           {stats && (
-            <dl className="history-stats" aria-label="所選期間歷史統計">
+            <dl
+              className={`history-stats${stats.latestPercentile === null ? ' sample-limited' : ''}`}
+              aria-label="所選期間歷史統計"
+            >
               <div>
                 <dt>期間變化</dt>
                 <dd>{stats.periodChange > 0 ? '+' : ''}{stats.periodChange.toFixed(0)} 分</dd>
@@ -209,7 +217,12 @@ export function HistoryChart({ history, events }: Props) {
               </div>
               <div><dt>≥ 70 分</dt><dd>{stats.warningDays} 日</dd></div>
               <div><dt>≥ 85 分</dt><dd>{stats.criticalDays} 日</dd></div>
-              <div><dt>最新百分位</dt><dd>{stats.latestPercentile}%</dd></div>
+              {stats.latestPercentile !== null && (
+                <div>
+                  <dt>最新歷史百分位</dt>
+                  <dd>{stats.latestPercentile}%<small>n={filteredHistory.length}</small></dd>
+                </div>
+              )}
             </dl>
           )}
           <div className="history-insight" role="note" aria-label="所選期間文字判讀">

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { DataStatusBanner } from './DataStatusBanner'
 import { IndicatorCard } from './IndicatorCard'
-import { HistoryChartTooltip } from './HistoryChart'
+import { HistoryChart, HistoryChartTooltip } from './HistoryChart'
 import { MarketPulse } from './MarketPulse'
 import { PressureMeter } from './PressureMeter'
 import { EventTimeline } from './EventTimeline'
@@ -43,10 +43,26 @@ describe('dashboard UI states', () => {
     )
 
     expect(html).toContain('共同資料基準')
+    expect(html).toContain('2026年7月19日')
+    expect(html).not.toContain('2026年7月19日 上午8:00')
     expect(html).toContain('最近成功抓取')
     expect(html).toContain('status-green')
     expect(html).toContain('距 70 分警戒 48 分')
     expect(html).toContain('布蘭特原油')
+  })
+
+  it('does not draw or report a percentile for three history observations', () => {
+    const history = [
+      historyItem('2026-07-19', 20),
+      historyItem('2026-07-20', 30),
+      historyItem('2026-07-21', 40),
+    ]
+    const html = renderToStaticMarkup(<HistoryChart history={history} events={[]} />)
+
+    expect(html).toContain('真實歷史累積中')
+    expect(html).toContain('目前有 3 筆真實觀測')
+    expect(html).not.toContain('最新歷史百分位')
+    expect(html).not.toContain('chart-wrap')
   })
 
   it('renders all five pressure bands and the current score marker', () => {
@@ -154,3 +170,15 @@ describe('dashboard UI states', () => {
     expect(html).toContain('官方政策文件')
   })
 })
+
+function historyItem(date: string, score: number): HistoryItem {
+  return {
+    date,
+    score,
+    compositeZ: score / 30,
+    brentZ: 0,
+    us10yZ: 0,
+    hormuzZ: 0,
+    sp500Z: 0,
+  }
+}

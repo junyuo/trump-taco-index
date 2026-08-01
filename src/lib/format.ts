@@ -28,3 +28,7 @@ export function formatDate(value: string): string {
     timeZone: 'Asia/Taipei',
   }).format(new Date(`${value}T12:00:00Z`))
 }
+
+export function formatObservationDate(value: string): string {
+  return formatDate(value.slice(0, 10))
+}

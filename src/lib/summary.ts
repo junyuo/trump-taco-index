@@ -43,6 +43,11 @@ export function buildHistoryObservationSummary(history: HistoryItem[]): string {
     return `目前僅有 ${formatDate(history[0].date)} 一筆歷史觀測，尚不足以判斷趨勢。`
   }
 
+  const sampleQualifier =
+    history.length < 20
+      ? `目前僅有 ${history.length} 筆觀測，以下為初步描述，不宜視為穩定歷史趨勢。`
+      : ''
+
   const maximum = history.find((item) => item.date === stats.maximumDate)!
   const leaderKey = getHistoryLeadingIndicatorKey(maximum)
   const leaderLabel = leaderKey
@@ -59,5 +64,5 @@ export function buildHistoryObservationSummary(history: HistoryItem[]): string {
       ? '期間內沒有進入 70 分警戒區。'
       : `期間共有 ${stats.warningDays} 日達到 70 分以上，其中 ${stats.criticalDays} 日達到 85 分以上。`
 
-  return `所選期間指數${changeText}。最高點為 ${formatDate(stats.maximumDate)} 的 ${stats.maximumScore} 分，當日主要壓力來自${leaderLabel}。${thresholdText}`
+  return `${sampleQualifier}所選期間指數${changeText}。最高點為 ${formatDate(stats.maximumDate)} 的 ${stats.maximumScore} 分，當日主要壓力來自${leaderLabel}。${thresholdText}`
 }

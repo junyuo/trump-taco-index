@@ -4,7 +4,7 @@ import {
   getThresholdDistance,
   indicatorPresentation,
 } from '../lib/dashboardView'
-import { formatDateTime } from '../lib/format'
+import { formatDateTime, formatObservationDate } from '../lib/format'
 import { getIndexStatus } from '../lib/tacoIndex'
 import type { LatestData } from '../types/data'
 import { PressureMeter } from './PressureMeter'
@@ -74,8 +74,8 @@ export function MarketPulse({ latest, summary }: MarketPulseProps) {
             <dd>{leadingLabels}</dd>
           </div>
           <div>
-            <dt><Database aria-hidden="true" size={16} />共同資料基準</dt>
-            <dd>{formatDateTime(latest.asOf)}</dd>
+            <dt><Database aria-hidden="true" size={16} />共同資料基準日</dt>
+            <dd>{formatObservationDate(latest.asOf)}</dd>
           </div>
           <div>
             <dt><Clock3 aria-hidden="true" size={16} />最近成功抓取</dt>

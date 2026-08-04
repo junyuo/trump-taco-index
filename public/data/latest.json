@@ -1,11 +1,11 @@
 {
-  "asOf": "2026-07-23T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-08-01T03:47:15.725Z",
+  "asOf": "2026-07-27T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-08-04T19:54:59.305Z",
   "dataMode": "delayed",
   "index": {
-    "score": 18,
-    "compositeZ": 0.5835486639665782,
-    "status": "還沒開火"
+    "score": 26,
+    "compositeZ": 0.854035879809282,
+    "status": "玉米餅開始加熱"
   },
   "indicators": {
     "brent": {
@@ -24,44 +24,44 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "value": 4.68,
+      "value": 4.75,
       "unit": "%",
-      "dailyChangePercent": 0.2141327623126293,
-      "zScore": 1.9434142449276048,
-      "pressureZ": 1.9434142449276048,
+      "dailyChangePercent": 1.495726495726502,
+      "zScore": 2.6582766024577813,
+      "pressureZ": 2.6582766024577813,
       "weight": 0.25,
-      "contribution": 0.4858535612319012,
+      "contribution": 0.6645691506144453,
       "source": "Federal Reserve Bank of St. Louis (FRED), DGS10",
       "sourceUrl": "https://fred.stlouisfed.org/series/DGS10",
-      "asOfDate": "2026-07-30",
+      "asOfDate": "2026-07-31",
       "dataStatus": "delayed"
     },
     "hormuz": {
       "label": "Strait of Hormuz Transit Calls",
-      "value": 10,
+      "value": 2,
       "unit": "vessels/day",
-      "dailyChangePercent": -9.090909090909092,
-      "zScore": -0.3878672100166736,
-      "pressureZ": 0.3878672100166736,
+      "dailyChangePercent": -33.33333333333333,
+      "zScore": -0.7549537158573123,
+      "pressureZ": 0.7549537158573123,
       "weight": 0.25,
-      "contribution": 0.0969668025041684,
+      "contribution": 0.18873842896432808,
       "source": "UN Global Platform; IMF PortWatch, Daily Chokepoints Data",
       "sourceUrl": "https://portwatch.imf.org/",
-      "asOfDate": "2026-07-23",
+      "asOfDate": "2026-08-02",
       "dataStatus": "delayed"
     },
     "sp500": {
       "label": "S&P 500",
-      "value": 7489.72,
+      "value": 7600.5,
       "unit": "points",
-      "dailyChangePercent": 0.7003575063561934,
-      "zScore": 0.41198887724557487,
+      "dailyChangePercent": 1.479094011525127,
+      "zScore": 1.8156672033074093,
       "pressureZ": 0,
       "weight": 0.2,
       "contribution": 0,
       "source": "Federal Reserve Bank of St. Louis (FRED), SP500",
       "sourceUrl": "https://fred.stlouisfed.org/series/SP500",
-      "asOfDate": "2026-07-31",
+      "asOfDate": "2026-08-03",
       "dataStatus": "delayed"
     }
   }

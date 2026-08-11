@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-08-02T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-08-11T02:25:45.661Z",
+  "asOf": "2026-08-03T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-08-11T13:39:44.335Z",
   "dataMode": "delayed",
   "index": {
-    "score": 15,
-    "compositeZ": 0.48751018136213553,
+    "score": 16,
+    "compositeZ": 0.5177062283841651,
     "status": "還沒開火"
   },
   "indicators": {
@@ -38,16 +38,16 @@
     },
     "hormuz": {
       "label": "Strait of Hormuz Transit Calls",
-      "value": 2,
+      "value": 1,
       "unit": "vessels/day",
-      "dailyChangePercent": -33.33333333333333,
-      "zScore": -0.7549537158573123,
-      "pressureZ": 0.7549537158573123,
+      "dailyChangePercent": -87.5,
+      "zScore": -0.8757379039454307,
+      "pressureZ": 0.8757379039454307,
       "weight": 0.25,
-      "contribution": 0.18873842896432808,
+      "contribution": 0.21893447598635768,
       "source": "UN Global Platform; IMF PortWatch, Daily Chokepoints Data",
       "sourceUrl": "https://portwatch.imf.org/",
-      "asOfDate": "2026-08-02",
+      "asOfDate": "2026-08-09",
       "dataStatus": "delayed"
     },
     "sp500": {

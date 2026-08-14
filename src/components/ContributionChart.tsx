@@ -41,7 +41,7 @@ export function ContributionChart({ latest }: { latest: LatestData }) {
       </div>
       <div className="contribution-chart" aria-label="四項指標壓力貢獻水平長條圖">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 18, left: 10, bottom: 0 }}>
+          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 54, left: 10, bottom: 0 }}>
             <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" horizontal={false} />
             <XAxis type="number" stroke="var(--chart-axis)" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis type="category" dataKey="name" width={104} stroke="var(--text-soft)" fontSize={12} tickLine={false} axisLine={false} />

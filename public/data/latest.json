@@ -1,25 +1,25 @@
 {
-  "asOf": "2026-08-18T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-08-26T01:56:26.172Z",
+  "asOf": "2026-08-23T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-08-26T20:01:20.816Z",
   "dataMode": "delayed",
   "index": {
-    "score": 23,
-    "compositeZ": 0.7569179916061927,
+    "score": 17,
+    "compositeZ": 0.5562155397621836,
     "status": "還沒開火"
   },
   "indicators": {
     "brent": {
       "label": "Brent Crude",
-      "value": 95.29,
+      "value": 88.24,
       "unit": "USD/barrel",
-      "dailyChangePercent": 3.0942334739803083,
-      "zScore": 0.8762825001544018,
-      "pressureZ": 0.8762825001544018,
+      "dailyChangePercent": -4.821486355301477,
+      "zScore": 0.20727432734103823,
+      "pressureZ": 0.20727432734103823,
       "weight": 0.3,
-      "contribution": 0.2628847500463205,
+      "contribution": 0.06218229820231147,
       "source": "Federal Reserve Bank of St. Louis (FRED), DCOILBRENTEU",
       "sourceUrl": "https://fred.stlouisfed.org/series/DCOILBRENTEU",
-      "asOfDate": "2026-08-18",
+      "asOfDate": "2026-08-25",
       "dataStatus": "delayed"
     },
     "us10y": {

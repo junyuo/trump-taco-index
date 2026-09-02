@@ -1,39 +1,39 @@
 {
-  "asOf": "2026-08-25T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-09-02T11:13:36.219Z",
+  "asOf": "2026-08-30T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-09-02T21:00:29.539Z",
   "dataMode": "delayed",
   "index": {
-    "score": 15,
-    "compositeZ": 0.5157205721496679,
-    "status": "還沒開火"
+    "score": 26,
+    "compositeZ": 0.8773376286593914,
+    "status": "玉米餅開始加熱"
   },
   "indicators": {
     "brent": {
       "label": "Brent Crude",
-      "value": 88.24,
+      "value": 96.02,
       "unit": "USD/barrel",
-      "dailyChangePercent": -4.821486355301477,
-      "zScore": 0.20727432734103823,
-      "pressureZ": 0.20727432734103823,
+      "dailyChangePercent": 6.9860724233983245,
+      "zScore": 1.1381154464372054,
+      "pressureZ": 1.1381154464372054,
       "weight": 0.3,
-      "contribution": 0.06218229820231147,
+      "contribution": 0.34143463393116164,
       "source": "Federal Reserve Bank of St. Louis (FRED), DCOILBRENTEU",
       "sourceUrl": "https://fred.stlouisfed.org/series/DCOILBRENTEU",
-      "asOfDate": "2026-08-25",
+      "asOfDate": "2026-09-01",
       "dataStatus": "delayed"
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "value": 4.75,
+      "value": 4.79,
       "unit": "%",
-      "dailyChangePercent": 0.42283298097250677,
-      "zScore": 1.5901516363176524,
-      "pressureZ": 1.5901516363176524,
+      "dailyChangePercent": 0.8421052631578954,
+      "zScore": 1.9196105194411455,
+      "pressureZ": 1.9196105194411455,
       "weight": 0.25,
-      "contribution": 0.3975379090794131,
+      "contribution": 0.47990262986028637,
       "source": "Federal Reserve Bank of St. Louis (FRED), DGS10",
       "sourceUrl": "https://fred.stlouisfed.org/series/DGS10",
-      "asOfDate": "2026-08-31",
+      "asOfDate": "2026-09-01",
       "dataStatus": "delayed"
     },
     "hormuz": {

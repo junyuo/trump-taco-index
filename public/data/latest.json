@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-30T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-09-02T21:00:29.539Z",
+  "lastSuccessfulUpdate": "2026-09-03T04:21:07.534Z",
   "dataMode": "delayed",
   "index": {
     "score": 26,
@@ -52,16 +52,16 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "value": 7631.47,
+      "value": 7666.6,
       "unit": "points",
-      "dailyChangePercent": -0.7112803045481877,
-      "zScore": 0.6307770931486396,
+      "dailyChangePercent": 0.46033070954875155,
+      "zScore": 0.8610038241294322,
       "pressureZ": 0,
       "weight": 0.2,
       "contribution": 0,
       "source": "Federal Reserve Bank of St. Louis (FRED), SP500",
       "sourceUrl": "https://fred.stlouisfed.org/series/SP500",
-      "asOfDate": "2026-09-01",
+      "asOfDate": "2026-09-02",
       "dataStatus": "delayed"
     }
   }

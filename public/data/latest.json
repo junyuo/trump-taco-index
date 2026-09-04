@@ -1,11 +1,11 @@
 {
   "asOf": "2026-08-30T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-09-04T04:31:56.732Z",
+  "lastSuccessfulUpdate": "2026-09-04T20:43:39.611Z",
   "dataMode": "delayed",
   "index": {
-    "score": 26,
-    "compositeZ": 0.8547519030383948,
-    "status": "玉米餅開始加熱"
+    "score": 24,
+    "compositeZ": 0.7883005481705196,
+    "status": "還沒開火"
   },
   "indicators": {
     "brent": {
@@ -24,16 +24,16 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "value": 4.79,
+      "value": 4.77,
       "unit": "%",
-      "dailyChangePercent": 0,
-      "zScore": 1.8292676169571591,
-      "pressureZ": 1.8292676169571591,
+      "dailyChangePercent": -0.41753653444677374,
+      "zScore": 1.5634621974856586,
+      "pressureZ": 1.5634621974856586,
       "weight": 0.25,
-      "contribution": 0.4573169042392898,
+      "contribution": 0.39086554937141466,
       "source": "Federal Reserve Bank of St. Louis (FRED), DGS10",
       "sourceUrl": "https://fred.stlouisfed.org/series/DGS10",
-      "asOfDate": "2026-09-02",
+      "asOfDate": "2026-09-03",
       "dataStatus": "delayed"
     },
     "hormuz": {

@@ -3,6 +3,7 @@ import {
   calculateDaysToPivot,
   deriveEventClassification,
   deriveEventConfidence,
+  isVerifiedEvent,
   prepareApprovedEvent,
 } from './eventResearch'
 import type { TacoEventCandidate } from '../types/data'
@@ -110,5 +111,11 @@ describe('event research rules', () => {
 
     const incomplete = { ...candidateFixture(), marketEvidence: null }
     expect(() => prepareApprovedEvent(incomplete)).toThrow('缺少可重算的市場證據')
+  })
+
+  it('requires all three source types before production display', () => {
+    const verified = prepareApprovedEvent(candidateFixture())
+    expect(isVerifiedEvent(verified)).toBe(true)
+    expect(isVerifiedEvent({ ...verified, sources: verified.sources.slice(0, 2) })).toBe(false)
   })
 })

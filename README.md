@@ -2,7 +2,7 @@
 
 一個可部署至 GitHub Pages 的繁體中文靜態金融資料視覺化專案。網站以 Brent 原油、美國 10 年期公債殖利率、荷姆茲海峽通行量與 S&P 500 建立可解釋的代理市場壓力指標，用來觀察市場是否接近過往敘事中的政策轉向區域。
 
-> 本站不是 Signum Global Advisors 官方指數，不預測 Donald Trump 必然改變政策，也不構成投資建議。版本庫預設保留明確標示的 demo 資料；市場指數可由 Actions 切換為真實延遲日資料，事件時間軸目前仍是 demo。
+> 本站不是 Signum Global Advisors 官方指數，不預測 Donald Trump 必然改變政策，也不構成投資建議。市場指數使用真實延遲日資料；未完成政策、市場與同期報導查證的事件不會在正式介面中顯示。
 
 ## 技術與架構
 
@@ -46,15 +46,15 @@ npm run data:test
 2. 到 **Settings → Pages → Build and deployment**。
 3. Source 選擇 **GitHub Actions**。
 4. 推送到 `main`；`.github/workflows/deploy.yml` 會依序執行 lint、test、build 並部署 `dist`。
-5. 部署網址通常為 `https://USERNAME.github.io/REPOSITORY_NAME/`。
+5. 本專案部署網址為 `https://junyuo.github.io/trump-taco-index/`。
 
 ### Repository name 與 Vite base path
 
 `vite.config.ts` 在 GitHub Actions 內會從 `GITHUB_REPOSITORY` 自動取得 repository name，設定成 `/<repository-name>/`；本機開發仍使用 `/`。因此不必把專案名稱硬編碼在 React 元件中。
 
-若 repository 是 GitHub Pages 的特殊根網站（例如 `USERNAME.github.io`），請把 `vite.config.ts` 的 base 判斷改成 `/`。
+若 repository 是 GitHub Pages 的特殊根網站（例如 `account-name.github.io`），請把 `vite.config.ts` 的 base 判斷改成 `/`。
 
-SEO 檔案中的 `USERNAME` 是公開網址 placeholder；上線前請在 `index.html`、`public/robots.txt`、`public/sitemap.xml` 替換為實際帳號。若 repository name 也更改，一併更新 canonical 與 Open Graph URL。
+Canonical、Open Graph、Twitter Card、JSON-LD、robots 與 sitemap 均使用正式網址。`npm run build` 會在建置前後檢查 metadata，若出現占位網址會直接失敗。
 
 ## Actions 權限
 
@@ -90,7 +90,7 @@ Provider 最多嘗試 3 次，每次失敗都有明確 log；不使用無限重�
 
 ## 資料檔案
 
-- `public/data/latest.json`：最新指數、四項指標、資料時間及資料狀態。
+- `public/data/latest.json`：時間對齊後的正式指數、前期分數、四項最新觀測與本期採用觀測、資料時間及資料狀態。
 - `public/data/history.json`：歷史分數、綜合 Z-score 與各指標 Z-score。
 - `public/data/events.json`：政策威脅、客觀市場反應、後續調整與來源。
 - `data/manual/hormuz-transit.json`：保留的人工示範資料；live provider 不會自動 fallback 到此檔。
@@ -166,7 +166,7 @@ compositeZ =
 2. 手動執行 **Update TACO market data**，選 `provider=live`、`publish=false`；連續三次 dry-run 成功，並抽查四項來源值與日期。
 3. 將 Actions variable `DATA_PROVIDER` 改為 `live`。
 4. 手動執行一次 `provider=live`、`publish=true`。若上一版是 demo，腳本會把 demo 歷史清除，只保留第一筆真實指數。
-5. 檢查線上 `latest.json` 的 `dataMode=delayed`、四張卡片的 `asOfDate`、來源連結及狀態。
+5. 檢查線上 `latest.json` 的 `dataMode=delayed`、`index.scoreAsOf`、四張卡片的 `latestObservationDate`／`alignedObservationDate`、來源連結及狀態。
 6. 觀察七天排程；任何來源失敗都應保留整批上一版，不得出現隨機 fallback。
 
 若需要暫停 live 更新，將 `DATA_PROVIDER` 改回 `demo`。排程會停止發布，但網站仍保留最後一份有效真實資料；不要手動執行 demo publish。
@@ -201,10 +201,11 @@ python3 scripts/validate_data.py \
 正式 workflow 只提交 `public/data/history.json`，由既有 Pages workflow 部署並比對遠端
 `latest.json` 與 `history.json`。Backfill 與六小時更新共用同一 concurrency group，避免同時寫入。
 
-Brent 與 10Y 使用 S&P 交易日當天或之前最近有效值，最大間隔 7 日；Hormuz 最大間隔 3 日。
-每點只使用該日期以前 60 筆觀測，不使用未來資料。歷史固定保留最近 252 個交易日；日常排程使用
-同一套日期對齊規則，只新增或取代最新合格交易日。首頁最新分數使用各來源最新延遲觀測，歷史圖
-則採同步交易日計算，兩者資料日期語意不同。
+首頁與歷史皆以最新可計算的 S&P 交易日作為 `scoreAsOf`。Brent 與 10Y 使用該日或之前最近有效值，
+最大間隔 7 日；Hormuz 最大間隔 3 日；S&P 500 必須是同日。每點只使用該日期以前 60 筆觀測，
+不使用未來資料。`latestValue`／`latestObservationDate` 只供卡片呈現來源最新行情，正式 TACO Index
+則完全由 `alignedValue`／`alignedObservationDate` 計算。歷史固定保留最近 252 個交易日；日常排程
+使用同一套日期對齊規則，只新增或取代最新合格交易日。
 
 ## 資料來源授權與引用
 

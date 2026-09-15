@@ -11,6 +11,12 @@ export const indexConfig = {
     hormuz: 240,
     sp500: 96,
   } satisfies Record<IndicatorKey, number>,
+  alignmentMaxGapDays: {
+    brent: 7,
+    us10y: 7,
+    hormuz: 3,
+    sp500: 0,
+  } satisfies Record<IndicatorKey, number>,
   weights: {
     brent: 0.3,
     us10y: 0.25,

@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "public" / "data"
 INDICATOR_KEYS = ("brent", "us10y", "hormuz", "sp500")
 LIVE_STALE_HOURS = {"brent": 192, "us10y": 96, "hormuz": 240, "sp500": 96}
+ALIGNMENT_MAX_GAP_DAYS = {"brent": 7, "us10y": 7, "hormuz": 3, "sp500": 0}
 FORBIDDEN_LIVE_MARKERS = ("demo", "simulated", "manual")
 
 
@@ -69,6 +70,18 @@ def validate_latest(
     score = finite_number(index.get("score"), "latest.index.score")
     require(0 <= score <= 100, "latest.index.score must be 0..100")
     finite_number(index.get("compositeZ"), "latest.index.compositeZ")
+    score_as_of = validate_iso_date(index.get("scoreAsOf"), "latest.index.scoreAsOf")
+    previous_score = index.get("previousScore")
+    score_change = index.get("scoreChange")
+    require(
+        previous_score is None or 0 <= finite_number(previous_score, "latest.index.previousScore") <= 100,
+        "latest.index.previousScore must be null or 0..100",
+    )
+    if previous_score is None:
+        require(score_change is None, "latest.index.scoreChange must be null without previousScore")
+    else:
+        change = finite_number(score_change, "latest.index.scoreChange")
+        require(abs(change - (score - float(previous_score))) < 1e-9, "latest.index.scoreChange is inconsistent")
 
     indicators = payload.get("indicators")
     require(isinstance(indicators, dict), "latest.indicators must be an object")
@@ -78,8 +91,9 @@ def validate_latest(
         item = indicators[key]
         require(isinstance(item, dict), f"{key} must be an object")
         for field in (
-            "value",
-            "dailyChangePercent",
+            "latestValue",
+            "latestDailyChangePercent",
+            "alignedValue",
             "zScore",
             "pressureZ",
             "weight",
@@ -91,10 +105,21 @@ def validate_latest(
             in {"realtime", "delayed", "manual", "simulated"},
             f"{key}.dataStatus is invalid",
         )
-        observation_date = validate_iso_date(
-            item.get("asOfDate"), f"{key}.asOfDate"
+        latest_observation_date = validate_iso_date(
+            item.get("latestObservationDate"), f"{key}.latestObservationDate"
         )
-        observation_dates.append(observation_date)
+        aligned_observation_date = validate_iso_date(
+            item.get("alignedObservationDate"), f"{key}.alignedObservationDate"
+        )
+        require(
+            aligned_observation_date <= score_as_of,
+            f"{key}.alignedObservationDate must not exceed scoreAsOf",
+        )
+        require(
+            (score_as_of - aligned_observation_date).days <= ALIGNMENT_MAX_GAP_DAYS[key],
+            f"{key}.alignedObservationDate exceeds allowed alignment gap",
+        )
+        observation_dates.append(latest_observation_date)
 
         if require_live:
             require(
@@ -114,12 +139,12 @@ def validate_latest(
             if validation_time.tzinfo is None:
                 validation_time = validation_time.replace(tzinfo=timezone.utc)
             observation_time = datetime.combine(
-                observation_date, time.max, tzinfo=timezone.utc
+                latest_observation_date, time.max, tzinfo=timezone.utc
             )
             age_hours = (
                 validation_time.astimezone(timezone.utc) - observation_time
             ).total_seconds() / 3600
-            require(age_hours >= 0, f"{key}.asOfDate cannot be in the future")
+            require(age_hours >= 0, f"{key}.latestObservationDate cannot be in the future")
             require(
                 age_hours <= LIVE_STALE_HOURS[key],
                 f"{key} exceeds {LIVE_STALE_HOURS[key]} hour freshness limit",
@@ -131,8 +156,8 @@ def validate_latest(
             "latest.dataMode must be delayed in live mode",
         )
         require(
-            as_of.astimezone(timezone.utc).date() == min(observation_dates),
-            "latest.asOf must equal the oldest indicator observation date",
+            as_of.astimezone(timezone.utc).date() == score_as_of,
+            "latest.asOf must equal latest.index.scoreAsOf",
         )
         require(
             indicators["hormuz"].get("unit") == "vessels/day",
@@ -199,6 +224,8 @@ def validate_events(payload: object, require_verified: bool = False) -> None:
             )
         else:
             require(item.get("daysToPivot") is None, "pending event daysToPivot must be null")
+        if item.get("lastReviewedAt") is not None:
+            validate_iso_date(item.get("lastReviewedAt"), f"events[{position}].lastReviewedAt")
 
         sources = item.get("sources")
         require(isinstance(sources, list), "event sources must be an array")
@@ -213,6 +240,7 @@ def validate_events(payload: object, require_verified: bool = False) -> None:
                 source.get("date"),
                 f"events[{position}].sources[{source_position}].date",
             )
+        source_types = {source.get("type") for source in sources}
 
         evidence = item.get("marketEvidence")
         criteria = item.get("criteria")
@@ -247,18 +275,27 @@ def validate_events(payload: object, require_verified: bool = False) -> None:
             ):
                 require(isinstance(criteria.get(key), bool), f"event criteria.{key} must be boolean")
 
+        if item.get("confidence") == "high":
+            require(
+                item.get("lastReviewedAt") is not None
+                and evidence is not None
+                and criteria is not None
+                and {"primary-policy", "market-data", "reporting"} <= source_types,
+                "high confidence event requires complete reviewed evidence",
+            )
+
         if require_verified:
             serialized = json.dumps(item, ensure_ascii=False).lower()
             for marker in ("demo", "simulated", "placeholder"):
                 require(marker not in serialized, f"verified events must not contain {marker}")
             require(len(sources) > 0, "verified event sources must not be empty")
-            source_types = {source.get("type") for source in sources}
             require(
                 {"primary-policy", "market-data", "reporting"} <= source_types,
                 "verified event requires policy, market, and reporting sources",
             )
             require(evidence is not None, "verified event requires marketEvidence")
             require(criteria is not None, "verified event requires criteria")
+            require(item.get("lastReviewedAt") is not None, "verified event requires lastReviewedAt")
             require(item.get("confidence") in ("high", "medium"), "verified event confidence is too low")
 
 

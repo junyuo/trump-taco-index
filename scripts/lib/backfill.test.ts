@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildBackfillHistory,
+  buildLatestAlignedIndex,
   buildLatestAlignedHistoryItem,
   findAsOfPoint,
 } from './backfill'
@@ -36,6 +37,35 @@ describe('historical backfill', () => {
     expect(history[0].date < history.at(-1)!.date).toBe(true)
     expect(history.every((item) => item.score >= 0 && item.score <= 100)).toBe(true)
     expect(buildLatestAlignedHistoryItem(series)).toEqual(history.at(-1))
+  })
+
+  it('最新 aligned index 不會使用 scoreAsOf 之後的 observation', () => {
+    const series = {
+      brent: dailySeries(380),
+      us10y: dailySeries(382, 20),
+      hormuz: dailySeries(377, -20),
+      sp500: dailySeries(382, 100),
+    }
+    const aligned = buildLatestAlignedIndex(series)
+
+    expect(aligned.item.date).toBe(series.sp500.at(-3)!.date)
+    expect(Object.values(aligned.observations).every((point) => point.date <= aligned.item.date)).toBe(true)
+    expect(series.us10y.at(-1)!.date > aligned.item.date).toBe(true)
+    expect(aligned.previousItem?.date).toBe(series.sp500.at(-4)!.date)
+  })
+
+  it('不會把來源向前填補超過設定的最大間隔', () => {
+    const base = dailySeries(380)
+    const series = {
+      brent: base,
+      us10y: base,
+      hormuz: base.slice(0, -4),
+      sp500: base,
+    }
+    const aligned = buildLatestAlignedIndex(series)
+
+    expect(aligned.item.date).toBe(base.at(-2)!.date)
+    expect(aligned.observations.hormuz.date).toBe(base.at(-5)!.date)
   })
 
   it('拒絕重複或亂序來源日期', () => {

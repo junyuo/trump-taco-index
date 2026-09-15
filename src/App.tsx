@@ -37,7 +37,7 @@ function LoadingDashboard() {
 function Dashboard({ data }: { data: DashboardData }) {
   const mobileNavRef = useRef<HTMLDetailsElement>(null)
   const staleIndicators = indicatorKeys.filter((key) =>
-    isIndicatorStale(key, data.latest.indicators[key].asOfDate),
+    isIndicatorStale(key, data.latest.indicators[key].latestObservationDate),
   )
   const summary = buildObservationSummary(data.latest)
   const maxContribution = Math.max(
@@ -82,7 +82,7 @@ function Dashboard({ data }: { data: DashboardData }) {
       <main id="top">
         <DataStatusBanner data={data.latest} staleIndicators={staleIndicators} />
 
-        <MarketPulse latest={data.latest} summary={summary} />
+        <MarketPulse latest={data.latest} history={data.history} summary={summary} />
 
         <aside className="transparency-strip" aria-label="模型與投資免責聲明">
           <Info aria-hidden="true" size={20} />
@@ -108,6 +108,7 @@ function Dashboard({ data }: { data: DashboardData }) {
                 indicator={data.latest.indicators[key]}
                 stale={staleIndicators.includes(key)}
                 maxContribution={maxContribution}
+                scoreAsOf={data.latest.index.scoreAsOf}
                 key={key}
               />
             ))}
@@ -127,7 +128,7 @@ function Dashboard({ data }: { data: DashboardData }) {
           <div id="timeline">
             <EventTimeline events={data.events} />
           </div>
-          <Methodology />
+          <Methodology latest={data.latest} />
         </div>
       </main>
 

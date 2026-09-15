@@ -1,7 +1,7 @@
 import { AlertTriangle, Database, FlaskConical } from 'lucide-react'
 import type { IndicatorKey } from '../config/indexConfig'
-import { indicatorPresentation } from '../lib/dashboardView'
-import { formatDateTime } from '../lib/format'
+import { getObservationLagDays, indicatorPresentation } from '../lib/dashboardView'
+import { formatDate, formatDateTime } from '../lib/format'
 import type { LatestData } from '../types/data'
 
 interface Props {
@@ -22,6 +22,16 @@ export function DataStatusBanner({ data, staleIndicators }: Props) {
     )
   }
 
+  const sourceDates = (Object.keys(data.indicators) as IndicatorKey[])
+    .map((key) => `${indicatorPresentation[key].shortLabel} ${formatDate(data.indicators[key].latestObservationDate)}`)
+    .join('｜')
+  const laggingSources = (Object.keys(data.indicators) as IndicatorKey[])
+    .map((key) => ({
+      key,
+      days: getObservationLagDays(data.indicators[key].alignedObservationDate, data.index.scoreAsOf),
+    }))
+    .filter(({ days }) => days > 0)
+
   if (staleIndicators.length > 0) {
     const names = staleIndicators.map((key) => indicatorPresentation[key].shortLabel).join('、')
     return (
@@ -29,7 +39,8 @@ export function DataStatusBanner({ data, staleIndicators }: Props) {
         <AlertTriangle aria-hidden="true" size={18} />
         <div>
           <strong>{names}更新延遲</strong>
-          <span>畫面保留最後一份有效資料；最近成功抓取於 {formatDateTime(data.lastSuccessfulUpdate)}。</span>
+          <span>TACO Index 基準日：{formatDate(data.index.scoreAsOf)}；畫面保留最後一份有效資料。</span>
+          <span>最近成功抓取：{formatDateTime(data.lastSuccessfulUpdate)}</span>
         </div>
       </div>
     )
@@ -40,8 +51,14 @@ export function DataStatusBanner({ data, staleIndicators }: Props) {
       <div className="data-banner live-banner" role="status">
         <Database aria-hidden="true" size={18} />
         <div>
-          <strong>四項來源狀態正常</strong>
-          <span>日資料／延遲發布；最近成功抓取於 {formatDateTime(data.lastSuccessfulUpdate)}。</span>
+          <strong>TACO Index 基準日：{formatDate(data.index.scoreAsOf)}</strong>
+          <span className="source-date-line">資料更新至：{sourceDates}</span>
+          {laggingSources.map(({ key, days }) => (
+            <span className="lag-note" key={key}>
+              {indicatorPresentation[key].shortLabel}資料落後 {days} 日，目前指數沿用最近有效觀測。
+            </span>
+          ))}
+          <span>最近成功抓取：{formatDateTime(data.lastSuccessfulUpdate)}</span>
         </div>
       </div>
     )

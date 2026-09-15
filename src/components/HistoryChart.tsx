@@ -14,17 +14,20 @@ import {
 import {
   getHistoryCoverage,
   getHistoryLeadingIndicatorKey,
+  getHistoryScoreChange,
   getHistorySampleState,
   getHistoryStats,
   indicatorPresentation,
   isHistoryRangeAvailable,
 } from '../lib/dashboardView'
+import { isVerifiedEvent } from '../lib/eventResearch'
 import { formatDate } from '../lib/format'
 import { buildHistoryObservationSummary } from '../lib/summary'
 import { getIndexStatus } from '../lib/tacoIndex'
 import type { HistoryItem, TacoEvent } from '../types/data'
 
 const rangeOptions = [
+  { label: '全部', days: null },
   { label: '1 個月', days: 31 },
   { label: '3 個月', days: 92 },
   { label: '6 個月', days: 183 },
@@ -44,18 +47,21 @@ export function HistoryChartTooltip({
   active,
   payload,
   events,
+  history,
 }: {
   active?: boolean
   payload?: TooltipPayload[]
   events: TacoEvent[]
+  history: HistoryItem[]
 }) {
   if (!active || !payload?.[0]) return null
   const item = payload[0].payload
   const status = getIndexStatus(item.score)
   const leadingKey = getHistoryLeadingIndicatorKey(item)
+  const scoreChange = getHistoryScoreChange(history, item.date)
   const matchedEvents = events.filter(
     (event) =>
-      event.sources.length > 0 &&
+      isVerifiedEvent(event) &&
       (event.threatDate === item.date || event.pivotDate === item.date),
   )
 
@@ -63,6 +69,7 @@ export function HistoryChartTooltip({
     <div className="chart-tooltip">
       <strong>{formatDate(item.date)}</strong>
       <span>指數 {item.score}</span>
+      <span>變化 {scoreChange === null ? '—' : `${scoreChange > 0 ? '+' : ''}${scoreChange}`}</span>
       <span>{status.icon} {status.name}</span>
       <span>綜合壓力 {item.compositeZ.toFixed(2)}σ</span>
       <span>
@@ -77,11 +84,17 @@ export function HistoryChartTooltip({
 
 export function HistoryChart({ history, events }: Props) {
   const [rangeDays, setRangeDays] = useState(
-    () => [...rangeOptions].reverse().find((option) => isHistoryRangeAvailable(history, option.days))?.days ?? 31,
+    () => history.length < 20
+      ? null
+      : [...rangeOptions]
+          .reverse()
+          .find((option) => option.days !== null && isHistoryRangeAvailable(history, option.days))
+          ?.days ?? null,
   )
   const coverage = getHistoryCoverage(history)
   const filteredHistory = useMemo(() => {
     if (history.length === 0) return []
+    if (rangeDays === null) return history
     const latestDate = new Date(`${history.at(-1)!.date}T00:00:00Z`).getTime()
     const cutoff = latestDate - rangeDays * 24 * 60 * 60 * 1000
     return history.filter((item) => new Date(`${item.date}T00:00:00Z`).getTime() >= cutoff)
@@ -105,7 +118,7 @@ export function HistoryChart({ history, events }: Props) {
         </div>
         <span className="history-coverage">
           {coverage.pointCount > 0 && coverage.startDate && coverage.endDate
-            ? `${formatDate(coverage.startDate)}－${formatDate(coverage.endDate)}｜${coverage.pointCount} 筆`
+            ? `目前歷史資料自 ${formatDate(coverage.startDate)} 開始｜共 ${coverage.pointCount} 筆有效 aligned observations`
             : '尚無資料'}
         </span>
         {sampleState === 'preliminary' && (
@@ -113,7 +126,7 @@ export function HistoryChart({ history, events }: Props) {
         )}
         <div className="range-tabs" role="group" aria-label="歷史圖表時間範圍">
           {rangeOptions.map((option) => {
-            const available = isHistoryRangeAvailable(history, option.days)
+            const available = option.days === null || isHistoryRangeAvailable(history, option.days)
             return (
               <button
                 type="button"
@@ -122,7 +135,7 @@ export function HistoryChart({ history, events }: Props) {
                 disabled={!available}
                 title={available ? undefined : `尚未累積足夠的${option.label}資料`}
                 onClick={() => setRangeDays(option.days)}
-                key={option.days}
+                key={option.label}
               >
                 {option.label}
               </button>
@@ -168,7 +181,7 @@ export function HistoryChart({ history, events }: Props) {
               <ReferenceArea y1={50} y2={70} fill="var(--band-orange)" fillOpacity={0.05} />
               <ReferenceArea y1={70} y2={85} fill="var(--band-red)" fillOpacity={0.06} />
               <ReferenceArea y1={85} y2={100} fill="var(--band-deep-red)" fillOpacity={0.07} />
-              <Tooltip content={<HistoryChartTooltip events={events} />} />
+              <Tooltip content={<HistoryChartTooltip events={events} history={history} />} />
               <ReferenceLine y={70} stroke="var(--orange)" strokeDasharray="5 5" label={{ value: '警戒 70', fill: 'var(--orange)', position: 'insideTopRight', fontSize: 12 }} />
               <ReferenceLine y={85} stroke="var(--deep-red)" strokeDasharray="5 5" label={{ value: 'TACO 85', fill: 'var(--critical-text)', position: 'insideTopRight', fontSize: 12 }} />
               <Area
@@ -237,7 +250,7 @@ export function HistoryChart({ history, events }: Props) {
         <span><i className="legend-line critical" />85 分 TACO 時刻</span>
       </div>
       <p className="history-method-note">
-        歷史分數採 S&amp;P 500 交易日同步對齊；首頁最新分數使用各來源最新延遲觀測，兩者資料日期語意不同。
+        歷史與首頁指數皆採 S&amp;P 500 交易日作為基準，並只使用該日或之前最近的有效觀測；各卡片另顯示來源最新值。
       </p>
     </section>
   )

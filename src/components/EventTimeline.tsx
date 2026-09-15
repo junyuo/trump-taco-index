@@ -3,11 +3,11 @@ import {
   CalendarDays,
   Check,
   ExternalLink,
-  FlaskConical,
   ShieldQuestion,
   X,
 } from 'lucide-react'
 import { formatDate } from '../lib/format'
+import { isVerifiedEvent } from '../lib/eventResearch'
 import type { TacoEvent } from '../types/data'
 
 const classificationLabels = {
@@ -107,40 +107,42 @@ function EventSources({ event }: { event: TacoEvent }) {
 }
 
 export function EventTimeline({ events }: { events: TacoEvent[] }) {
-  const isDemoResearch = events.length > 0 && events.every((event) => event.sources.length === 0)
-  const orderedEvents = [...events].sort((left, right) =>
+  const orderedEvents = events.filter(isVerifiedEvent).sort((left, right) =>
     right.threatDate.localeCompare(left.threatDate),
   )
 
+  if (orderedEvents.length === 0) {
+    return (
+      <section className="timeline-section research-empty" aria-labelledby="timeline-title">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">THREAT → MARKET → PIVOT</span>
+            <h2 id="timeline-title">事件研究區</h2>
+          </div>
+        </div>
+        <div className="empty-state">
+          <strong>TACO 事件研究資料建置中</strong>
+          <span>此區只會收錄具官方政策來源、可驗證市場資料與獨立同期報導的事件。</span>
+        </div>
+      </section>
+    )
+  }
+
   return (
-    <section className={`timeline-section${isDemoResearch ? ' demo-research' : ''}`} aria-labelledby="timeline-title">
-      <details open={!isDemoResearch}>
+    <section className="timeline-section" aria-labelledby="timeline-title">
+      <details open>
         <summary className="section-heading">
           <div>
             <span className="eyebrow">THREAT → MARKET → PIVOT</span>
-            <h2 id="timeline-title">{isDemoResearch ? '事件研究區' : 'TACO 事件時間軸'}</h2>
+            <h2 id="timeline-title">TACO 事件時間軸</h2>
           </div>
-          {isDemoResearch ? (
-            <span className="demo-research-badge"><FlaskConical aria-hidden="true" size={14} />DEMO／尚未完成來源查證</span>
-          ) : (
-            <span className="section-count">{events.length} 筆已查證研究</span>
-          )}
+          <span className="section-count">{orderedEvents.length} 筆已查證研究</span>
         </summary>
         <div className="timeline-body">
-          {isDemoResearch && (
-            <p className="research-note">
-              此區內容僅示範事件資料結構，不是已驗證的政策或市場紀錄。
-            </p>
-          )}
-          {!isDemoResearch && events.length > 0 && (
-            <p className="research-causality-note">
-              事件研究呈現政策與市場壓力的時間關聯，不代表已證明政策調整由市場壓力造成。
-            </p>
-          )}
-          {events.length === 0 ? (
-            <div className="empty-state">尚無經驗證的歷史事件。</div>
-          ) : (
-            <div className="timeline-list">
+          <p className="research-causality-note">
+            事件研究呈現政策與市場壓力的時間關聯，不代表已證明政策調整由市場壓力造成。
+          </p>
+          <div className="timeline-list">
               {orderedEvents.map((event) => (
             <article className="timeline-item" key={event.id}>
               <div className="timeline-marker" aria-hidden="true">
@@ -184,8 +186,7 @@ export function EventTimeline({ events }: { events: TacoEvent[] }) {
               </div>
             </article>
               ))}
-            </div>
-          )}
+          </div>
         </div>
       </details>
     </section>

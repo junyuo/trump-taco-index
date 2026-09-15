@@ -11,6 +11,7 @@ interface Props {
   indicator: Indicator
   stale: boolean
   maxContribution: number
+  scoreAsOf: string
 }
 
 const statusLabels = {
@@ -26,11 +27,11 @@ const impactLabels = {
   neutral: '目前未增加壓力',
 } as const
 
-export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution }: Props) {
+export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution, scoreAsOf }: Props) {
   const TrendIcon =
-    indicator.dailyChangePercent > 0
+    indicator.latestDailyChangePercent > 0
       ? ArrowUpRight
-      : indicator.dailyChangePercent < 0
+      : indicator.latestDailyChangePercent < 0
         ? ArrowDownRight
         : Minus
   const StatusIcon = stale ? AlertTriangle : indicator.dataStatus === 'manual' ? Wrench : Radio
@@ -38,13 +39,15 @@ export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution 
   const dailyImpact =
     indicator.contribution === 0
       ? 'neutral'
-      : getDailyPressureImpact(indicatorKey, indicator.dailyChangePercent)
+      : getDailyPressureImpact(indicatorKey, indicator.latestDailyChangePercent)
   const contributionPercent =
     maxContribution > 0 ? Math.min(100, (indicator.contribution / maxContribution) * 100) : 0
 
   const sourceContent = (
     <>
-      來源日期：{formatDate(indicator.asOfDate)}
+      最新來源日期：{formatDate(indicator.latestObservationDate)}
+      <br />
+      指數採用：{formatNumber(indicator.alignedValue)}（{formatDate(indicator.alignedObservationDate)}）
       <br />
       來源：
       {indicator.sourceUrl ? (
@@ -68,15 +71,20 @@ export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution 
         <small>{indicator.label}</small>
       </h3>
       <div className="indicator-value-row">
-        <strong>{formatNumber(indicator.value)}</strong>
+        <strong>{formatNumber(indicator.latestValue)}</strong>
         <span>{indicator.unit}</span>
       </div>
       <div className="indicator-direction-row">
-        <div className="daily-change" aria-label={`市場單日變動 ${formatPercent(indicator.dailyChangePercent)}`}>
+        <div className="daily-change" aria-label={`市場單日變動 ${formatPercent(indicator.latestDailyChangePercent)}`}>
           <TrendIcon aria-hidden="true" size={17} />
-          {formatPercent(indicator.dailyChangePercent)} 市場變動
+          {formatPercent(indicator.latestDailyChangePercent)} 市場變動
         </div>
         <span className={`pressure-impact ${dailyImpact}`}>{impactLabels[dailyImpact]}</span>
+      </div>
+      <div className="indicator-contribution-primary">
+        <span>TACO 壓力貢獻</span>
+        <strong>{indicator.contribution > 0 ? '+' : ''}{indicator.contribution.toFixed(2)}σ</strong>
+        {indicator.pressureZ === 0 && <small>目前未增加 TACO 壓力</small>}
       </div>
       <dl className="indicator-metrics">
         <div>
@@ -84,16 +92,12 @@ export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution 
           <dd>{indicator.zScore > 0 ? '+' : ''}{indicator.zScore.toFixed(2)}σ</dd>
         </div>
         <div>
-          <dt>壓力 Z</dt>
-          <dd>{indicator.pressureZ.toFixed(2)}σ</dd>
-        </div>
-        <div>
           <dt>權重</dt>
           <dd>{Math.round(indicator.weight * 100)}%</dd>
         </div>
         <div>
-          <dt>加權貢獻</dt>
-          <dd>{indicator.contribution.toFixed(2)}σ</dd>
+          <dt>指數採用日</dt>
+          <dd>{formatDate(indicator.alignedObservationDate)}</dd>
         </div>
       </dl>
       <div
@@ -102,6 +106,11 @@ export function IndicatorCard({ indicatorKey, indicator, stale, maxContribution 
       >
         <span style={{ width: `${contributionPercent}%` }} />
       </div>
+      {indicator.latestObservationDate > scoreAsOf && (
+        <p className="indicator-alignment-note">
+          較指數基準日更新，尚未納入本期 TACO Index。
+        </p>
+      )}
       <div className="indicator-source indicator-source-desktop">
         <StatusIcon aria-hidden="true" size={15} />
         <span>{sourceContent}</span>

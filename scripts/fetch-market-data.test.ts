@@ -44,22 +44,31 @@ describe('data update publication rules', () => {
   it('相同來源日期與數值不視為新批次', () => {
     const indicator = {
       label: 'fixture',
-      value: 1,
+      latestValue: 1,
+      latestObservationDate: '2026-07-27',
+      latestDailyChangePercent: 0,
+      alignedValue: 1,
+      alignedObservationDate: '2026-07-27',
       unit: 'points',
-      dailyChangePercent: 0,
       zScore: 0,
       pressureZ: 0,
       weight: 0.25,
       contribution: 0,
       source: 'fixture',
-      asOfDate: '2026-07-27',
       dataStatus: 'delayed' as const,
     }
     const latest: LatestData = {
       asOf: '2026-07-27T00:00:00Z',
       lastSuccessfulUpdate: '2026-07-27T01:00:00Z',
       dataMode: 'delayed',
-      index: { score: 0, compositeZ: 0, status: '還沒開火' },
+      index: {
+        score: 0,
+        compositeZ: 0,
+        status: '還沒開火',
+        scoreAsOf: '2026-07-27',
+        previousScore: 0,
+        scoreChange: 0,
+      },
       indicators: {
         brent: { ...indicator, weight: 0.3 },
         us10y: indicator,

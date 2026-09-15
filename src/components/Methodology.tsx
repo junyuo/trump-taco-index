@@ -1,6 +1,8 @@
 import { BookOpen, Scale, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { indexConfig } from '../config/indexConfig'
+import { indexConfig, indicatorKeys } from '../config/indexConfig'
+import { indicatorPresentation } from '../lib/dashboardView'
+import type { LatestData } from '../types/data'
 
 const methodItems: { title: string; icon: ReactNode; content: ReactNode }[] = [
   {
@@ -32,7 +34,7 @@ const methodItems: { title: string; icon: ReactNode; content: ReactNode }[] = [
   },
 ]
 
-export function Methodology() {
+export function Methodology({ latest }: { latest: LatestData }) {
   return (
     <section className="method-section" id="methodology" aria-labelledby="method-title">
       <div className="section-heading">
@@ -57,6 +59,45 @@ export function Methodology() {
             <p>{item.content}</p>
           </details>
         ))}
+      </div>
+      <div className="technical-details">
+        <details>
+          <summary>完整計算方式</summary>
+          <div className="technical-content">
+            <p>每個指標使用該基準日以前最近 60 筆有效觀測計算 rolling Z-score：</p>
+            <code>z = (currentValue − rollingMean) / rollingStandardDeviation</code>
+            <ul>
+              <li>Brent：max(0, z)</li>
+              <li>US 10Y：max(0, z)</li>
+              <li>Hormuz：max(0, −z)</li>
+              <li>S&amp;P 500：max(0, −z)</li>
+            </ul>
+            <p>Composite = Brent × 0.30 + US 10Y × 0.25 + Hormuz × 0.25 + S&amp;P 500 × 0.20。</p>
+            <p>分數以分段線性插值換算：0σ → 0、1σ → 30、2σ → 60、2.9σ → 85、3.4σ → 100。</p>
+            <p>上述權重、斷點與 2.9σ 門檻是可解釋的代理模型 calibration，不是自然科學定律或確定預測。</p>
+          </div>
+        </details>
+        <details>
+          <summary>本期怎麼算出來？</summary>
+          <div className="calculation-breakdown">
+            {indicatorKeys.map((key) => {
+              const item = latest.indicators[key]
+              return (
+                <div key={key}>
+                  <span>{indicatorPresentation[key].shortLabel}</span>
+                  <code>{item.pressureZ.toFixed(3)}σ × {Math.round(item.weight * 100)}%</code>
+                  <strong>= {item.contribution.toFixed(3)}σ</strong>
+                </div>
+              )
+            })}
+            <div className="calculation-total">
+              <span>Composite</span>
+              <code>{latest.index.compositeZ.toFixed(3)}σ</code>
+              <strong>TACO Score = {latest.index.score}</strong>
+            </div>
+            <p>計算基準日：{latest.index.scoreAsOf}；本區只使用時間對齊後的觀測。</p>
+          </div>
+        </details>
       </div>
       <div className="disclaimer-box">
         <strong>重要聲明</strong>

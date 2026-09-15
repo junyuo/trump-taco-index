@@ -19,30 +19,40 @@ NOW = datetime(2026, 7, 27, 12, tzinfo=timezone.utc)
 def live_fixture() -> dict:
     indicator = {
         "label": "Market fixture",
-        "value": 100,
+        "latestValue": 100,
+        "latestObservationDate": "2026-07-25",
+        "latestDailyChangePercent": 1,
+        "alignedValue": 99,
+        "alignedObservationDate": "2026-07-25",
         "unit": "points",
-        "dailyChangePercent": 1,
         "zScore": 1,
         "pressureZ": 1,
         "weight": 0.25,
         "contribution": 0.25,
         "source": "Official source",
         "sourceUrl": "https://example.com/source",
-        "asOfDate": "2026-07-25",
         "dataStatus": "delayed",
     }
     return {
-        "asOf": "2026-07-20T00:00:00Z",
+        "asOf": "2026-07-25T00:00:00Z",
         "lastSuccessfulUpdate": NOW.isoformat(),
         "dataMode": "delayed",
-        "index": {"score": 30, "compositeZ": 1, "status": "test"},
+        "index": {
+            "score": 30,
+            "compositeZ": 1,
+            "status": "test",
+            "scoreAsOf": "2026-07-25",
+            "previousScore": 24,
+            "scoreChange": 6,
+        },
         "indicators": {
             "brent": {**indicator, "weight": 0.3},
             "us10y": indicator,
             "hormuz": {
                 **indicator,
                 "unit": "vessels/day",
-                "asOfDate": "2026-07-20",
+                "latestObservationDate": "2026-07-22",
+                "alignedObservationDate": "2026-07-22",
             },
             "sp500": {**indicator, "weight": 0.2},
         },
@@ -66,21 +76,30 @@ class LiveValidationTests(unittest.TestCase):
 
     def test_rejects_stale_market_and_hormuz_data(self) -> None:
         market = copy.deepcopy(live_fixture())
-        market["indicators"]["sp500"]["asOfDate"] = "2026-07-22"
+        market["indicators"]["sp500"]["latestObservationDate"] = "2026-07-22"
         with self.assertRaisesRegex(ValueError, "96"):
             validate_latest(market, require_live=True, now=NOW)
 
         brent = copy.deepcopy(live_fixture())
-        brent["indicators"]["brent"]["asOfDate"] = "2026-07-18"
-        brent["asOf"] = "2026-07-18T00:00:00Z"
+        brent["indicators"]["brent"]["latestObservationDate"] = "2026-07-18"
         with self.assertRaisesRegex(ValueError, "192"):
             validate_latest(brent, require_live=True, now=NOW)
 
         hormuz = copy.deepcopy(live_fixture())
-        hormuz["indicators"]["hormuz"]["asOfDate"] = "2026-07-16"
-        hormuz["asOf"] = "2026-07-16T00:00:00Z"
+        hormuz["indicators"]["hormuz"]["latestObservationDate"] = "2026-07-16"
         with self.assertRaisesRegex(ValueError, "240"):
             validate_latest(hormuz, require_live=True, now=NOW)
+
+    def test_rejects_future_alignment_and_inconsistent_score_change(self) -> None:
+        future = copy.deepcopy(live_fixture())
+        future["indicators"]["us10y"]["alignedObservationDate"] = "2026-07-26"
+        with self.assertRaisesRegex(ValueError, "must not exceed"):
+            validate_latest(future, require_live=True, now=NOW)
+
+        inconsistent = copy.deepcopy(live_fixture())
+        inconsistent["index"]["scoreChange"] = 99
+        with self.assertRaisesRegex(ValueError, "inconsistent"):
+            validate_latest(inconsistent, require_live=True, now=NOW)
 
     def test_smoke_retries_three_times(self) -> None:
         attempts: list[str] = []
@@ -160,6 +179,7 @@ class LiveValidationTests(unittest.TestCase):
             "pivotDate": "2025-04-09",
             "daysToPivot": 7,
             "confidence": "medium",
+            "lastReviewedAt": "2026-07-29",
             "marketEvidence": {
                 "baselineScore": 20,
                 "peakScore": 35,

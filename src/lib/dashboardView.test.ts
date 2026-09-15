@@ -2,15 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { getIndexStatus } from './tacoIndex'
 import {
   getDailyPressureImpact,
+  buildShareText,
   getHistoryCoverage,
   getHistoryContributions,
   getHistoryLeadingIndicatorKey,
+  getHistoryScoreChange,
   getHistorySampleState,
   getHistoryStats,
+  getObservationLagDays,
+  getShortTermTrend,
   getThresholdDistance,
   isHistoryRangeAvailable,
 } from './dashboardView'
-import type { HistoryItem } from '../types/data'
+import type { HistoryItem, LatestData } from '../types/data'
 
 function historyItem(date: string, score = 20): HistoryItem {
   return {
@@ -140,5 +144,66 @@ describe('dashboard view helpers', () => {
       historyItem(new Date(Date.UTC(2025, 0, index + 1)).toISOString().slice(0, 10)),
     )
     expect(isHistoryRangeAvailable(history, 366)).toBe(true)
+  })
+
+  it('derives aligned score changes and short-term trend without prediction claims', () => {
+    const history = [
+      historyItem('2026-09-01', 26),
+      historyItem('2026-09-08', 23),
+      historyItem('2026-09-09', 35),
+    ]
+    expect(getHistoryScoreChange(history, '2026-09-09')).toBe(12)
+    expect(getHistoryScoreChange(history, '2026-09-01')).toBeNull()
+    expect(getShortTermTrend(history)).toBe('rising')
+    expect(getShortTermTrend(history.map((item, index) => ({ ...item, score: 40 - index * 4 })))).toBe('cooling')
+  })
+
+  it('reports only backward-fill lag relative to scoreAsOf', () => {
+    expect(getObservationLagDays('2026-09-06', '2026-09-09')).toBe(3)
+    expect(getObservationLagDays('2026-09-11', '2026-09-09')).toBe(0)
+  })
+
+  it('builds share copy from the current aligned index', () => {
+    const baseIndicator = {
+      label: 'Fixture',
+      latestValue: 100,
+      latestObservationDate: '2026-09-11',
+      latestDailyChangePercent: 1,
+      alignedValue: 99,
+      alignedObservationDate: '2026-09-09',
+      unit: 'points',
+      zScore: 1,
+      pressureZ: 1,
+      weight: 0.25,
+      contribution: 0.25,
+      source: 'Source',
+      sourceUrl: 'https://example.com/source',
+      dataStatus: 'delayed' as const,
+    }
+    const latest: LatestData = {
+      asOf: '2026-09-09T00:00:00Z',
+      lastSuccessfulUpdate: '2026-09-12T00:00:00Z',
+      dataMode: 'delayed',
+      index: {
+        score: 41,
+        compositeZ: 1.36,
+        status: '玉米餅開始加熱',
+        scoreAsOf: '2026-09-09',
+        previousScore: 35,
+        scoreChange: 6,
+      },
+      indicators: {
+        brent: { ...baseIndicator, label: 'Brent Crude', weight: 0.3, contribution: 0.68 },
+        us10y: { ...baseIndicator, label: 'US 10Y Treasury', contribution: 0.5 },
+        hormuz: { ...baseIndicator, label: 'Hormuz', contribution: 0 },
+        sp500: { ...baseIndicator, label: 'S&P 500', weight: 0.2, contribution: 0 },
+      },
+    }
+
+    const text = buildShareText(latest)
+    expect(text).toContain('目前：41 / 100')
+    expect(text).toContain('主要壓力：布蘭特原油、美國 10Y')
+    expect(text).toContain('市場基準日：2026/09/09')
+    expect(text).toContain('https://junyuo.github.io/trump-taco-index/')
   })
 })

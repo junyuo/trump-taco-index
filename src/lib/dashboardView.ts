@@ -30,8 +30,48 @@ export function getLeadingIndicatorKeys(
 ): IndicatorKey[] {
   return (Object.entries(indicators) as [IndicatorKey, LatestData['indicators']['brent']][])
     .sort(([, left], [, right]) => right.contribution - left.contribution)
+    .filter(([, item]) => item.contribution > 0)
     .slice(0, limit)
     .map(([key]) => key)
+}
+
+export type ShortTermTrend = 'rising' | 'stable' | 'cooling'
+
+export function getShortTermTrend(history: HistoryItem[]): ShortTermTrend {
+  const recent = history.slice(-3)
+  if (recent.length < 2) return 'stable'
+  const netChange = recent.at(-1)!.score - recent[0].score
+  if (netChange >= 3) return 'rising'
+  if (netChange <= -3) return 'cooling'
+  return 'stable'
+}
+
+export function getObservationLagDays(observationDate: string, scoreAsOf: string): number {
+  const dayMilliseconds = 24 * 60 * 60 * 1_000
+  return Math.max(
+    0,
+    Math.round(
+      (Date.parse(`${scoreAsOf}T00:00:00Z`) -
+        Date.parse(`${observationDate}T00:00:00Z`)) /
+        dayMilliseconds,
+    ),
+  )
+}
+
+export function buildShareText(latest: LatestData): string {
+  const leading = getLeadingIndicatorKeys(latest.indicators)
+    .map((key) => indicatorPresentation[key].shortLabel)
+    .join('、') || '無明顯正向壓力'
+  return [
+    'Trump TACO Index 🌮',
+    `目前：${latest.index.score} / 100`,
+    latest.index.status,
+    '',
+    `主要壓力：${leading}`,
+    `市場基準日：${latest.index.scoreAsOf.replaceAll('-', '/')}`,
+    '',
+    'https://junyuo.github.io/trump-taco-index/',
+  ].join('\n')
 }
 
 export function getThresholdDistance(score: number, threshold: 70 | 85): number {
@@ -127,6 +167,12 @@ export function getHistoryLeadingIndicatorKey(
   )
 
   return contributions[leader] > 0 ? leader : null
+}
+
+export function getHistoryScoreChange(history: HistoryItem[], date: string): number | null {
+  const index = history.findIndex((item) => item.date === date)
+  if (index <= 0) return null
+  return history[index].score - history[index - 1].score
 }
 
 export function getHistoryStats(history: HistoryItem[]): HistoryStats | null {

@@ -14,7 +14,7 @@ import { assertLiveReadiness } from './liveReadiness'
 import { DemoProvider } from './providers/demoProvider'
 import { LiveProvider } from './providers/liveProvider'
 import type { DataProvider, ProviderSnapshot } from './providers/types'
-import { buildLatestAlignedHistoryItem } from './lib/backfill'
+import { buildLatestAlignedIndex } from './lib/backfill'
 
 const latestPath = resolve('public/data/latest.json')
 const historyPath = resolve('public/data/history.json')
@@ -80,10 +80,13 @@ export function createNextHistory(
 export function hasNewObservationBatch(previous: LatestData, next: LatestData): boolean {
   return (
     previous.dataMode !== next.dataMode ||
+    previous.index.scoreAsOf !== next.index.scoreAsOf ||
     indicatorKeys.some(
       (key) =>
-        previous.indicators[key].asOfDate !== next.indicators[key].asOfDate ||
-        previous.indicators[key].value !== next.indicators[key].value,
+        previous.indicators[key].latestObservationDate !== next.indicators[key].latestObservationDate ||
+        previous.indicators[key].latestValue !== next.indicators[key].latestValue ||
+        previous.indicators[key].alignedObservationDate !== next.indicators[key].alignedObservationDate ||
+        previous.indicators[key].alignedValue !== next.indicators[key].alignedValue,
     )
   )
 }
@@ -95,7 +98,7 @@ async function main() {
 
   console.log(`[data] 使用 ${provider.name} provider（${dryRun ? 'dry-run' : 'publish'}）`)
   const snapshot = await fetchWithRetry(provider)
-  const summaries = Object.fromEntries(
+  const latestSummaries = Object.fromEntries(
     indicatorKeys.map((key) => {
       const observation = snapshot.observations[key]
       const history = observation.history.slice(-indexConfig.rollingWindow)
@@ -107,36 +110,53 @@ async function main() {
       return [key, summarize(observation.value, history)]
     }),
   ) as Record<IndicatorKey, SeriesSummary>
-  const zScores = Object.fromEntries(
-    indicatorKeys.map((key) => [key, summaries[key].zScore]),
-  ) as Record<IndicatorKey, number>
-
-  const compositeZ = calculateCompositeZ(zScores)
-  const score = compositeZToScore(compositeZ)
   const previousLatest = latestDataSchema.parse(JSON.parse(await readFile(latestPath, 'utf8')))
+  const history = historyDataSchema.parse(JSON.parse(await readFile(historyPath, 'utf8')))
+  const alignedIndex = snapshot.series ? buildLatestAlignedIndex(snapshot.series) : null
+  const zScores = alignedIndex
+    ? {
+        brent: alignedIndex.item.brentZ,
+        us10y: alignedIndex.item.us10yZ,
+        hormuz: alignedIndex.item.hormuzZ,
+        sp500: alignedIndex.item.sp500Z,
+      }
+    : Object.fromEntries(
+        indicatorKeys.map((key) => [key, latestSummaries[key].zScore]),
+      ) as Record<IndicatorKey, number>
+  const compositeZ = alignedIndex?.item.compositeZ ?? calculateCompositeZ(zScores)
+  const score = alignedIndex?.item.score ?? compositeZToScore(compositeZ)
+  const scoreAsOf = alignedIndex?.item.date ?? snapshot.asOf.slice(0, 10)
+  const previousScore = alignedIndex?.previousItem?.score ?? null
+  const scoreChange = previousScore === null ? null : score - previousScore
   const successfulUpdate = new Date().toISOString()
 
   const indicators = Object.fromEntries(
     indicatorKeys.map((key) => {
       const observation = snapshot.observations[key]
+      const alignedObservation = alignedIndex?.observations[key] ?? {
+        date: observation.observationDate,
+        value: observation.value,
+      }
       const pressureZ = toPressureZ(key, zScores[key])
       return [
         key,
         {
           label: observation.label,
-          value: observation.value,
-          unit: observation.unit,
-          dailyChangePercent:
+          latestValue: observation.value,
+          latestObservationDate: observation.observationDate,
+          latestDailyChangePercent:
             observation.previousValue === 0
               ? 0
               : ((observation.value - observation.previousValue) / observation.previousValue) * 100,
+          alignedValue: alignedObservation.value,
+          alignedObservationDate: alignedObservation.date,
+          unit: observation.unit,
           zScore: zScores[key],
           pressureZ,
           weight: indexConfig.weights[key],
           contribution: pressureZ * indexConfig.weights[key],
           source: observation.source,
           ...(observation.sourceUrl ? { sourceUrl: observation.sourceUrl } : {}),
-          asOfDate: observation.observationDate,
           dataStatus: observation.dataStatus,
         },
       ]
@@ -144,19 +164,23 @@ async function main() {
   ) as LatestData['indicators']
 
   const latest = latestDataSchema.parse({
-    asOf: snapshot.asOf,
+    asOf: `${scoreAsOf}T00:00:00Z`,
     lastSuccessfulUpdate: successfulUpdate,
     dataMode: snapshot.mode,
-    index: { score, compositeZ, status: getIndexStatus(score).name },
+    index: {
+      score,
+      compositeZ,
+      status: getIndexStatus(score).name,
+      scoreAsOf,
+      previousScore,
+      scoreChange,
+    },
     indicators,
   })
   if (provider.name === 'live') {
     assertLiveReadiness(latest, new Date(successfulUpdate))
   }
-  const history = historyDataSchema.parse(JSON.parse(await readFile(historyPath, 'utf8')))
-  const entry: HistoryItem = snapshot.series
-    ? buildLatestAlignedHistoryItem(snapshot.series)
-    : {
+  const entry: HistoryItem = alignedIndex?.item ?? {
         date: snapshot.asOf.slice(0, 10),
         score,
         compositeZ,
@@ -169,14 +193,19 @@ async function main() {
 
   for (const key of indicatorKeys) {
     const observation = snapshot.observations[key]
-    const stats = summaries[key]
+    const stats = latestSummaries[key]
+    const alignedObservation = indicators[key]
     console.log(
-      `[data] ${key}: date=${observation.observationDate} value=${observation.value} ` +
-        `mean60=${stats.mean.toFixed(4)} sd60=${stats.standardDeviation.toFixed(4)} ` +
-        `z=${stats.zScore.toFixed(4)}`,
+      `[data] ${key}: latestDate=${observation.observationDate} latestValue=${observation.value} ` +
+        `alignedDate=${alignedObservation.alignedObservationDate} alignedValue=${alignedObservation.alignedValue} ` +
+        `latestMean60=${stats.mean.toFixed(4)} latestSd60=${stats.standardDeviation.toFixed(4)} ` +
+        `alignedZ=${zScores[key].toFixed(4)}`,
     )
   }
-  console.log(`[data] compositeZ=${compositeZ.toFixed(4)} score=${score}`)
+  console.log(
+    `[data] scoreAsOf=${scoreAsOf} compositeZ=${compositeZ.toFixed(4)} score=${score} ` +
+      `previousScore=${previousScore ?? 'n/a'} scoreChange=${scoreChange ?? 'n/a'}`,
+  )
 
   if (dryRun) {
     console.log('[data] dry-run 驗證成功；未修改 public/data JSON。')

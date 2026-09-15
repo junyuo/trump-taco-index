@@ -4,6 +4,18 @@ import {
   type TacoEventCandidate,
 } from '../types/data'
 
+export function isVerifiedEvent(event: TacoEvent): boolean {
+  const sourceTypes = new Set(event.sources.map((source) => source.type))
+  return Boolean(
+    event.lastReviewedAt &&
+      event.marketEvidence &&
+      event.criteria &&
+      sourceTypes.has('primary-policy') &&
+      sourceTypes.has('market-data') &&
+      sourceTypes.has('reporting'),
+  )
+}
+
 export function calculateDaysToPivot(
   threatDate: string,
   pivotDate: string | null,

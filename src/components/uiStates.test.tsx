@@ -10,16 +10,18 @@ import type { HistoryItem, LatestData } from '../types/data'
 
 const indicator: LatestData['indicators']['brent'] = {
   label: 'Brent Crude',
-  value: 86.99,
+  latestValue: 86.99,
+  latestObservationDate: '2026-07-20',
+  latestDailyChangePercent: 2.33,
+  alignedValue: 85.5,
+  alignedObservationDate: '2026-07-19',
   unit: 'USD/barrel',
-  dailyChangePercent: 2.33,
   zScore: -0.39,
   pressureZ: 0,
   weight: 0.3,
   contribution: 0,
   source: 'FRED',
   sourceUrl: 'https://fred.stlouisfed.org/',
-  asOfDate: '2026-07-20',
   dataStatus: 'delayed',
 }
 
@@ -27,7 +29,14 @@ const latest: LatestData = {
   asOf: '2026-07-19T00:00:00Z',
   lastSuccessfulUpdate: '2026-07-27T05:38:35Z',
   dataMode: 'delayed',
-  index: { score: 22, compositeZ: 0.74, status: '還沒開火' },
+  index: {
+    score: 22,
+    compositeZ: 0.74,
+    status: '還沒開火',
+    scoreAsOf: '2026-07-19',
+    previousScore: 18,
+    scoreChange: 4,
+  },
   indicators: {
     brent: indicator,
     us10y: { ...indicator, label: 'US 10Y Treasury' },
@@ -39,16 +48,16 @@ const latest: LatestData = {
 describe('dashboard UI states', () => {
   it('labels the common data basis separately from the successful fetch time', () => {
     const html = renderToStaticMarkup(
-      <MarketPulse latest={latest} summary="目前市場壓力仍有限。" />,
+      <MarketPulse latest={latest} history={[historyItem('2026-07-18', 18), historyItem('2026-07-19', 22)]} summary="目前市場壓力仍有限。" />,
     )
 
-    expect(html).toContain('共同資料基準')
+    expect(html).toContain('TACO Index 基準日')
     expect(html).toContain('2026年7月19日')
     expect(html).not.toContain('2026年7月19日 上午8:00')
-    expect(html).toContain('最近成功抓取')
     expect(html).toContain('status-green')
-    expect(html).toContain('距 70 分警戒 48 分')
-    expect(html).toContain('布蘭特原油')
+    expect(html).toContain('距 TACO 警戒 48 分')
+    expect(html).toContain('較前一市場觀測日 +4')
+    expect(html).toContain('分享目前指數')
   })
 
   it('does not draw or report a percentile for three history observations', () => {
@@ -61,6 +70,7 @@ describe('dashboard UI states', () => {
 
     expect(html).toContain('真實歷史累積中')
     expect(html).toContain('目前有 3 筆真實觀測')
+    expect(html).toContain('全部')
     expect(html).not.toContain('最新歷史百分位')
     expect(html).not.toContain('chart-wrap')
   })
@@ -83,6 +93,7 @@ describe('dashboard UI states', () => {
         indicator={indicator}
         stale
         maxContribution={0.5}
+        scoreAsOf="2026-07-19"
       />,
     )
 
@@ -98,6 +109,28 @@ describe('dashboard UI states', () => {
     )
 
     expect(html).toContain('布蘭特原油、荷姆茲通行量更新延遲')
+    expect(html).toContain('TACO Index 基準日')
+    expect(html).toContain('最近成功抓取')
+  })
+
+  it('separates score date, source dates, lag, and successful fetch time', () => {
+    const data: LatestData = {
+      ...latest,
+      indicators: {
+        ...latest.indicators,
+        hormuz: {
+          ...latest.indicators.hormuz,
+          latestObservationDate: '2026-07-16',
+          alignedObservationDate: '2026-07-16',
+        },
+      },
+    }
+    const html = renderToStaticMarkup(<DataStatusBanner data={data} staleIndicators={[]} />)
+
+    expect(html).toContain('TACO Index 基準日')
+    expect(html).toContain('資料更新至')
+    expect(html).toContain('資料落後 3 日')
+    expect(html).toContain('最近成功抓取')
   })
 
   it('shows the historical leading pressure source in the chart tooltip', () => {
@@ -111,11 +144,17 @@ describe('dashboard UI states', () => {
       sp500Z: 0,
     }
     const html = renderToStaticMarkup(
-      <HistoryChartTooltip active payload={[{ payload: historyItem }]} events={[]} />,
+      <HistoryChartTooltip
+        active
+        payload={[{ payload: historyItem }]}
+        events={[]}
+        history={[{ ...historyItem, date: '2026-07-21', score: 69 }, historyItem]}
+      />,
     )
 
     expect(html).toContain('TACO 警戒')
     expect(html).toContain('主要壓力：布蘭特原油')
+    expect(html).toContain('變化 +9')
   })
 
   it('renders auditable event evidence without claiming causation', () => {
@@ -158,6 +197,20 @@ describe('dashboard UI states', () => {
                 date: '2025-04-02',
                 url: 'https://example.com/policy',
               },
+              {
+                type: 'market-data',
+                title: '市場資料',
+                publisher: '資料來源',
+                date: '2025-04-08',
+                url: 'https://example.com/market',
+              },
+              {
+                type: 'reporting',
+                title: '同期報導',
+                publisher: '媒體',
+                date: '2025-04-09',
+                url: 'https://example.com/report',
+              },
             ],
           },
         ]}
@@ -168,6 +221,31 @@ describe('dashboard UI states', () => {
     expect(html).toContain('期間最高')
     expect(html).toContain('標普 500')
     expect(html).toContain('官方政策文件')
+  })
+
+  it('does not expose demo event details as verified production research', () => {
+    const html = renderToStaticMarkup(
+      <EventTimeline
+        events={[{
+          id: 'demo-event',
+          threatDate: '2025-04-02',
+          pivotDate: '2025-04-09',
+          category: 'tariff',
+          title: '示範事件不可顯示',
+          threatSummary: 'Demo',
+          pivotSummary: 'Demo',
+          marketReaction: 'Demo',
+          daysToPivot: 7,
+          tacoClassification: 'possible',
+          confidence: 'low',
+          sources: [],
+        }]}
+      />,
+    )
+
+    expect(html).toContain('TACO 事件研究資料建置中')
+    expect(html).not.toContain('示範事件不可顯示')
+    expect(html).not.toContain('2025')
   })
 })
 

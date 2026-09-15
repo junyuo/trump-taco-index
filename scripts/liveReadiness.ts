@@ -8,11 +8,8 @@ export function assertLiveReadiness(data: LatestData, now = new Date()): true {
     throw new Error(`live 資料模式必須是 delayed，目前為 ${data.dataMode}`)
   }
 
-  const oldestObservationDate = indicatorKeys
-    .map((key) => data.indicators[key].asOfDate)
-    .sort()[0]
-  if (data.asOf.slice(0, 10) !== oldestObservationDate) {
-    throw new Error('latest.asOf 必須等於四項資料中最舊的觀測日期')
+  if (data.asOf.slice(0, 10) !== data.index.scoreAsOf) {
+    throw new Error('latest.asOf 必須等於 index.scoreAsOf')
   }
 
   for (const key of indicatorKeys) {
@@ -23,10 +20,22 @@ export function assertLiveReadiness(data: LatestData, now = new Date()): true {
     if (!indicator.sourceUrl) {
       throw new Error(`${key}.sourceUrl 為 live 資料必要欄位`)
     }
-    const observationTime = Date.parse(`${indicator.asOfDate}T23:59:59Z`)
+    if (indicator.alignedObservationDate > data.index.scoreAsOf) {
+      throw new Error(`${key}.alignedObservationDate 不可晚於 index.scoreAsOf`)
+    }
+    const alignmentGapDays =
+      (Date.parse(`${data.index.scoreAsOf}T00:00:00Z`) -
+        Date.parse(`${indicator.alignedObservationDate}T00:00:00Z`)) /
+      (24 * 60 * 60 * 1_000)
+    if (alignmentGapDays > indexConfig.alignmentMaxGapDays[key]) {
+      throw new Error(
+        `${key} 對齊資料超過 ${indexConfig.alignmentMaxGapDays[key]} 日允許間隔`,
+      )
+    }
+    const observationTime = Date.parse(`${indicator.latestObservationDate}T23:59:59Z`)
     const ageHours = (now.getTime() - observationTime) / (60 * 60 * 1_000)
     if (ageHours < 0) {
-      throw new Error(`${key}.asOfDate 不可晚於驗證時間`)
+      throw new Error(`${key}.latestObservationDate 不可晚於驗證時間`)
     }
     if (ageHours > indexConfig.indicatorStaleAfterHours[key]) {
       throw new Error(

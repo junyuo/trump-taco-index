@@ -1,6 +1,6 @@
 {
   "asOf": "2026-09-16T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-09-17T21:18:42.679Z",
+  "lastSuccessfulUpdate": "2026-09-18T04:38:25.724Z",
   "dataMode": "delayed",
   "index": {
     "score": 51,
@@ -61,9 +61,9 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "latestValue": 7551.81,
-      "latestObservationDate": "2026-09-16",
-      "latestDailyChangePercent": -0.44715538254062775,
+      "latestValue": 7637.76,
+      "latestObservationDate": "2026-09-17",
+      "latestDailyChangePercent": 1.138137744461259,
       "alignedValue": 7551.81,
       "alignedObservationDate": "2026-09-16",
       "unit": "points",

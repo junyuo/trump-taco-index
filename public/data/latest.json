@@ -1,14 +1,14 @@
 {
-  "asOf": "2026-09-21T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-09-22T21:15:34.119Z",
+  "asOf": "2026-09-22T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-09-23T04:41:02.230Z",
   "dataMode": "delayed",
   "index": {
     "score": 56,
     "compositeZ": 1.857885373825561,
     "status": "餡料快包不住",
-    "scoreAsOf": "2026-09-21",
-    "previousScore": 47,
-    "scoreChange": 9
+    "scoreAsOf": "2026-09-22",
+    "previousScore": 56,
+    "scoreChange": 0
   },
   "indicators": {
     "brent": {
@@ -61,13 +61,13 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "latestValue": 7764.7,
-      "latestObservationDate": "2026-09-21",
-      "latestDailyChangePercent": 1.492712894582051,
-      "alignedValue": 7764.7,
-      "alignedObservationDate": "2026-09-21",
+      "latestValue": 7764.64,
+      "latestObservationDate": "2026-09-22",
+      "latestDailyChangePercent": -0.0007727278581206059,
+      "alignedValue": 7764.64,
+      "alignedObservationDate": "2026-09-22",
       "unit": "points",
-      "zScore": 1.3996426232436479,
+      "zScore": 1.365439644482713,
       "pressureZ": 0,
       "weight": 0.2,
       "contribution": 0,

@@ -1,14 +1,14 @@
 {
   "asOf": "2026-09-23T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-09-24T04:44:01.873Z",
+  "lastSuccessfulUpdate": "2026-09-24T21:28:27.185Z",
   "dataMode": "delayed",
   "index": {
-    "score": 39,
-    "compositeZ": 1.2888587903346787,
+    "score": 46,
+    "compositeZ": 1.5343012589846055,
     "status": "玉米餅開始加熱",
     "scoreAsOf": "2026-09-23",
     "previousScore": 39,
-    "scoreChange": 0
+    "scoreChange": 7
   },
   "indicators": {
     "brent": {
@@ -29,16 +29,16 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "latestValue": 4.96,
-      "latestObservationDate": "2026-09-22",
-      "latestDailyChangePercent": 0,
-      "alignedValue": 4.96,
-      "alignedObservationDate": "2026-09-22",
+      "latestValue": 5.11,
+      "latestObservationDate": "2026-09-23",
+      "latestDailyChangePercent": 3.0241935483871036,
+      "alignedValue": 5.11,
+      "alignedObservationDate": "2026-09-23",
       "unit": "%",
-      "zScore": 1.840875289804806,
-      "pressureZ": 1.840875289804806,
+      "zScore": 2.822645164404513,
+      "pressureZ": 2.822645164404513,
       "weight": 0.25,
-      "contribution": 0.4602188224512015,
+      "contribution": 0.7056612911011283,
       "source": "Federal Reserve Bank of St. Louis (FRED), DGS10",
       "sourceUrl": "https://fred.stlouisfed.org/series/DGS10",
       "dataStatus": "delayed"

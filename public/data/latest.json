@@ -1,14 +1,14 @@
 {
-  "asOf": "2026-10-05T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-10-06T22:37:51.238Z",
+  "asOf": "2026-10-06T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-10-07T05:53:14.178Z",
   "dataMode": "delayed",
   "index": {
     "score": 29,
     "compositeZ": 0.9710827807526234,
     "status": "玉米餅開始加熱",
-    "scoreAsOf": "2026-10-05",
-    "previousScore": 30,
-    "scoreChange": -1
+    "scoreAsOf": "2026-10-06",
+    "previousScore": 29,
+    "scoreChange": 0
   },
   "indicators": {
     "brent": {
@@ -61,13 +61,13 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "latestValue": 7773.95,
-      "latestObservationDate": "2026-10-05",
-      "latestDailyChangePercent": 0.6633673109992277,
-      "alignedValue": 7773.95,
-      "alignedObservationDate": "2026-10-05",
+      "latestValue": 7818.93,
+      "latestObservationDate": "2026-10-06",
+      "latestDailyChangePercent": 0.5785990390985339,
+      "alignedValue": 7818.93,
+      "alignedObservationDate": "2026-10-06",
       "unit": "points",
-      "zScore": 1.2516085721344503,
+      "zScore": 1.603124234032228,
       "pressureZ": 0,
       "weight": 0.2,
       "contribution": 0,

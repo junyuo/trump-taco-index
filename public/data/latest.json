@@ -1,14 +1,14 @@
 {
-  "asOf": "2026-10-27T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-10-28T22:31:22.502Z",
+  "asOf": "2026-10-28T00:00:00Z",
+  "lastSuccessfulUpdate": "2026-10-29T05:41:54.847Z",
   "dataMode": "delayed",
   "index": {
     "score": 16,
     "compositeZ": 0.5433686401019104,
     "status": "還沒開火",
-    "scoreAsOf": "2026-10-27",
-    "previousScore": 22,
-    "scoreChange": -6
+    "scoreAsOf": "2026-10-28",
+    "previousScore": 16,
+    "scoreChange": 0
   },
   "indicators": {
     "brent": {
@@ -61,13 +61,13 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "latestValue": 7722.6,
-      "latestObservationDate": "2026-10-27",
-      "latestDailyChangePercent": 0.5969958719617746,
-      "alignedValue": 7722.6,
-      "alignedObservationDate": "2026-10-27",
+      "latestValue": 7743.98,
+      "latestObservationDate": "2026-10-28",
+      "latestDailyChangePercent": 0.27684976562296637,
+      "alignedValue": 7743.98,
+      "alignedObservationDate": "2026-10-28",
       "unit": "points",
-      "zScore": 0.311854408256462,
+      "zScore": 0.6446802516959224,
       "pressureZ": 0,
       "weight": 0.2,
       "contribution": 0,

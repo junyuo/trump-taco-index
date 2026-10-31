@@ -1,6 +1,6 @@
 {
   "asOf": "2026-10-28T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-10-29T22:42:23.353Z",
+  "lastSuccessfulUpdate": "2026-10-31T05:33:48.892Z",
   "dataMode": "delayed",
   "index": {
     "score": 18,
@@ -29,9 +29,9 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "latestValue": 5.05,
-      "latestObservationDate": "2026-10-28",
-      "latestDailyChangePercent": 1.2024048096192306,
+      "latestValue": 4.98,
+      "latestObservationDate": "2026-10-29",
+      "latestDailyChangePercent": -1.3861386138613743,
       "alignedValue": 5.05,
       "alignedObservationDate": "2026-10-28",
       "unit": "%",

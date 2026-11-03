@@ -1,6 +1,6 @@
 {
   "asOf": "2026-10-28T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-10-31T05:33:48.892Z",
+  "lastSuccessfulUpdate": "2026-11-03T00:55:35.606Z",
   "dataMode": "delayed",
   "index": {
     "score": 18,
@@ -29,9 +29,9 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "latestValue": 4.98,
-      "latestObservationDate": "2026-10-29",
-      "latestDailyChangePercent": -1.3861386138613743,
+      "latestValue": 4.94,
+      "latestObservationDate": "2026-10-30",
+      "latestDailyChangePercent": -0.8032128514056232,
       "alignedValue": 5.05,
       "alignedObservationDate": "2026-10-28",
       "unit": "%",
@@ -61,9 +61,9 @@
     },
     "sp500": {
       "label": "S&P 500",
-      "latestValue": 7743.98,
-      "latestObservationDate": "2026-10-28",
-      "latestDailyChangePercent": 0.27684976562296637,
+      "latestValue": 7580.07,
+      "latestObservationDate": "2026-10-30",
+      "latestDailyChangePercent": -1.8175247623500965,
       "alignedValue": 7743.98,
       "alignedObservationDate": "2026-10-28",
       "unit": "points",

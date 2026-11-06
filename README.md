@@ -74,6 +74,10 @@ Canonical、Open Graph、Twitter Card、JSON-LD、robots 與 sitemap 均使用�
 
 Hormuz 使用 IMF PortWatch 公開的 `Daily_Chokepoints_Data`、`portid=chokepoint6`、`n_total`，不需要憑證。三個 FRED 指標標示為 delayed；Hormuz 也標示為 delayed，單位是 `vessels/day`。前端不會接觸 API Key，也不會把日資料顯示成即時行情。
 
+PortWatch 使用基本分頁查詢（每頁 1,000 筆、最多 10 頁），取得完整 Hormuz 序列後才依日期排序並選取所需筆數，避免服務端排序或欄位投影查詢出錯。HTTP 200 內的 ArcGIS `error` 也視為失敗；分頁不足或超過安全上限時不發布部分結果。整批 provider 最多重試 3 次。
+
+若 workflow 顯示 `hormuz 資料已超過 240 小時 freshness 門檻`，錯誤訊息會列出最新來源日期與延遲時數。這代表來源尚未提供合格新資料，單純重跑不保證恢復。請先對照 [官方資料集](https://portwatch.imf.org/datasets/imf-dataviz::daily-chokepoints-data)，待來源更新後以 `provider=live`、`publish=false` 試跑成功，再勾選 publish。不可透過改日期、demo fallback 或放寬門檻繞過檢查；失敗時保留最後有效 JSON。
+
 在 Actions variables 設定 `DATA_PROVIDER=live` 才會讓排程發布真實資料。未設定 Secret、來源失敗、少於「目前值＋前 60 筆」、日期或 schema 驗證失敗時，腳本會：
 
 1. 顯示清楚錯誤並讓 job 失敗。

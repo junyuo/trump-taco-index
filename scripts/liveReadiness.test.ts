@@ -79,6 +79,8 @@ describe('live readiness gate', () => {
     const staleHormuz = liveFixture()
     staleHormuz.indicators.hormuz.latestObservationDate = '2026-07-16'
     expect(() => assertLiveReadiness(staleHormuz, now)).toThrow('240')
+    expect(() => assertLiveReadiness(staleHormuz, now)).toThrow('最新觀測日 2026-07-16')
+    expect(() => assertLiveReadiness(staleHormuz, now)).toThrow('已延遲 252.0 小時')
   })
 
   it('拒絕 latest.asOf 與 scoreAsOf 不一致', () => {

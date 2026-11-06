@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { ProviderObservation, TimeSeriesPoint } from './types'
 
 const portWatchResponseSchema = z.object({
+  exceededTransferLimit: z.boolean().optional(),
   features: z.array(
     z.object({
       attributes: z.object({
@@ -14,6 +15,13 @@ const portWatchResponseSchema = z.object({
   ),
 })
 
+const arcGisErrorSchema = z.object({
+  error: z.object({ code: z.number(), message: z.string() }),
+})
+
+const pageSize = 1_000
+const maxPages = 10
+
 interface FetchResponse {
   ok: boolean
   status: number
@@ -23,12 +31,16 @@ interface FetchResponse {
 type Fetcher = (input: URL) => Promise<FetchResponse>
 
 const endpoint =
-  'https://services9.arcgis.com/weJ1QsnbMYJlCHdG/arcgis/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query'
+  'https://services9.arcgis.com/weJ1QsnbMYJlCHdG/ArcGIS/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query'
 
 export function normalizePortWatchObservations(
   payload: unknown,
   minimumValues: number,
 ): TimeSeriesPoint[] {
+  const apiError = arcGisErrorSchema.safeParse(payload)
+  if (apiError.success) {
+    throw new Error(`IMF PortWatch ArcGIS 錯誤（${apiError.data.error.code}）：${apiError.data.error.message}`)
+  }
   const parsed = portWatchResponseSchema.parse(payload)
   const byDate = new Map<string, number>()
   for (const { attributes } of parsed.features) {
@@ -45,7 +57,9 @@ export function normalizePortWatchObservations(
 }
 
 export class PortWatchProvider {
-  constructor(private readonly fetcher: Fetcher = fetch) {}
+  constructor(
+    private readonly fetcher: Fetcher = (url) => fetch(url, { signal: AbortSignal.timeout(30_000) }),
+  ) {}
 
   async fetchTransit(): Promise<ProviderObservation> {
     const points = await this.fetchSeries(90, 90)
@@ -66,18 +80,36 @@ export class PortWatchProvider {
   }
 
   async fetchSeries(limit = 550, minimumValues = 61): Promise<TimeSeriesPoint[]> {
+    if (!Number.isInteger(limit) || limit < minimumValues || minimumValues < 1) {
+      throw new Error('PortWatch limit 必須是整數且不小於 minimumValues')
+    }
+    // Basic paginated queries work when ArcGIS rejects orderByFields / field projections.
+    // Read the complete series before sorting, so unordered pages cannot hide newer dates.
     const url = new URL(endpoint)
     url.searchParams.set('f', 'json')
     url.searchParams.set('where', "portid='chokepoint6'")
-    url.searchParams.set('outFields', 'date,portid,portname,n_total')
-    url.searchParams.set('orderByFields', 'date DESC')
-    url.searchParams.set('resultRecordCount', String(limit))
+    url.searchParams.set('outFields', '*')
+    url.searchParams.set('resultRecordCount', String(pageSize))
     url.searchParams.set('returnGeometry', 'false')
 
-    const response = await this.fetcher(url)
-    if (!response.ok) {
-      throw new Error(`IMF PortWatch 請求失敗（HTTP ${response.status}）`)
+    const features: z.infer<typeof portWatchResponseSchema>['features'] = []
+    for (let page = 0; page < maxPages; page += 1) {
+      if (page > 0) url.searchParams.set('resultOffset', String(page * pageSize))
+      const response = await this.fetcher(new URL(url))
+      if (!response.ok) {
+        throw new Error(`IMF PortWatch 請求失敗（HTTP ${response.status}）`)
+      }
+      const payload: unknown = await response.json()
+      const apiError = arcGisErrorSchema.safeParse(payload)
+      if (apiError.success) {
+        throw new Error(`IMF PortWatch ArcGIS 錯誤（${apiError.data.error.code}）：${apiError.data.error.message}`)
+      }
+      const parsed = portWatchResponseSchema.parse(payload)
+      features.push(...parsed.features)
+      if (parsed.features.length < pageSize && parsed.exceededTransferLimit !== true) {
+        return normalizePortWatchObservations({ features }, minimumValues).slice(-limit)
+      }
     }
-    return normalizePortWatchObservations(await response.json(), minimumValues)
+    throw new Error(`IMF PortWatch 超過 ${maxPages} 頁安全上限，拒絕使用不完整序列`)
   }
 }

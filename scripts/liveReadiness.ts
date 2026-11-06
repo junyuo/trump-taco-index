@@ -39,7 +39,8 @@ export function assertLiveReadiness(data: LatestData, now = new Date()): true {
     }
     if (ageHours > indexConfig.indicatorStaleAfterHours[key]) {
       throw new Error(
-        `${key} 資料已超過 ${indexConfig.indicatorStaleAfterHours[key]} 小時 freshness 門檻`,
+        `${key} 資料已超過 ${indexConfig.indicatorStaleAfterHours[key]} 小時 freshness 門檻` +
+          `：最新觀測日 ${indicator.latestObservationDate}，已延遲 ${ageHours.toFixed(1)} 小時；保留最後有效資料，等待來源更新`,
       )
     }
   }

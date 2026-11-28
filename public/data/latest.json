@@ -1,6 +1,6 @@
 {
   "asOf": "2026-11-25T00:00:00Z",
-  "lastSuccessfulUpdate": "2026-11-27T21:11:25.141Z",
+  "lastSuccessfulUpdate": "2026-11-28T07:40:49.072Z",
   "dataMode": "delayed",
   "index": {
     "score": 25,
@@ -29,13 +29,13 @@
     },
     "us10y": {
       "label": "US 10Y Treasury",
-      "latestValue": 4.91,
-      "latestObservationDate": "2026-11-24",
-      "latestDailyChangePercent": -0.2032520325203209,
-      "alignedValue": 4.91,
-      "alignedObservationDate": "2026-11-24",
+      "latestValue": 4.85,
+      "latestObservationDate": "2026-11-25",
+      "latestDailyChangePercent": -1.2219959266802545,
+      "alignedValue": 4.85,
+      "alignedObservationDate": "2026-11-25",
       "unit": "%",
-      "zScore": -0.7014809458164041,
+      "zScore": -1.138770430296995,
       "pressureZ": 0,
       "weight": 0.25,
       "contribution": 0,
